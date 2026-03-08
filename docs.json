@@ -1,122 +1,163 @@
 {
   "$schema": "https://mintlify.com/docs.json",
-  "theme": "mint",
-  "name": "Mint Starter Kit",
+  "name": "ServITech Backend",
+  "theme": "aspen",
   "colors": {
-    "primary": "#16A34A",
-    "light": "#07C983",
-    "dark": "#15803D"
+    "primary": "#242b2c",
+    "light": "#040404"
   },
-  "favicon": "/favicon.svg",
+  "favicon": "https://media.brand.dev/f29018a1-d2d4-46d2-8d13-4a2632a679a2.png",
+  "logo": {
+    "light": "https://media.brand.dev/3b16fb27-22e9-4daa-a368-88b404b0d37e.svg",
+    "dark": "https://media.brand.dev/3b16fb27-22e9-4daa-a368-88b404b0d37e.svg"
+  },
+  "navbar": {
+    "primary": {
+      "type": "github",
+      "href": "https://github.com/MOSHE9647/ServITech-Backend"
+    }
+  },
+  "footer": {
+    "socials": {
+      "github": "https://github.com/MOSHE9647/ServITech-Backend"
+    }
+  },
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
-            "group": "Getting started",
+            "group": "Get Started",
+            "pages": ["introduction", "quickstart", "installation"]
+          },
+          {
+            "group": "Authentication",
             "pages": [
-              "index",
-              "quickstart",
-              "development"
+              "authentication/overview",
+              "authentication/jwt-tokens",
+              "authentication/login",
+              "authentication/register",
+              "authentication/password-reset"
             ]
           },
           {
-            "group": "Customization",
+            "group": "Core Concepts",
             "pages": [
-              "essentials/settings",
-              "essentials/navigation"
-            ]
-          },
-          {
-            "group": "Writing content",
-            "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/reusable-snippets"
-            ]
-          },
-          {
-            "group": "AI tools",
-            "pages": [
-              "ai-tools/cursor",
-              "ai-tools/claude-code",
-              "ai-tools/windsurf"
+              "concepts/architecture",
+              "concepts/authorization",
+              "concepts/localization",
+              "concepts/error-handling"
             ]
           }
         ]
       },
       {
-        "tab": "API reference",
+        "tab": "API Reference",
         "groups": [
           {
-            "group": "API documentation",
+            "group": "Overview",
+            "pages": ["api/overview", "api/base-url", "api/response-format"]
+          },
+          {
+            "group": "Authentication",
             "pages": [
-              "api-reference/introduction"
+              "api/auth/login",
+              "api/auth/register",
+              "api/auth/logout",
+              "api/auth/reset-password"
             ]
           },
           {
-            "group": "Endpoint examples",
+            "group": "Articles",
             "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
+              "api/articles/list",
+              "api/articles/get",
+              "api/articles/create",
+              "api/articles/update",
+              "api/articles/delete"
+            ]
+          },
+          {
+            "group": "Categories",
+            "pages": [
+              "api/categories/list",
+              "api/categories/get",
+              "api/categories/create",
+              "api/categories/update",
+              "api/categories/delete"
+            ]
+          },
+          {
+            "group": "Subcategories",
+            "pages": [
+              "api/subcategories/list",
+              "api/subcategories/get",
+              "api/subcategories/create",
+              "api/subcategories/update",
+              "api/subcategories/delete"
+            ]
+          },
+          {
+            "group": "Support Requests",
+            "pages": [
+              "api/support-requests/list",
+              "api/support-requests/get",
+              "api/support-requests/create",
+              "api/support-requests/update",
+              "api/support-requests/delete"
+            ]
+          },
+          {
+            "group": "Repair Requests",
+            "pages": [
+              "api/repair-requests/list",
+              "api/repair-requests/get",
+              "api/repair-requests/create",
+              "api/repair-requests/update",
+              "api/repair-requests/delete"
+            ]
+          },
+          {
+            "group": "User Profile",
+            "pages": [
+              "api/user/profile",
+              "api/user/update-profile",
+              "api/user/update-password"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "Guides",
+        "groups": [
+          {
+            "group": "Development",
+            "pages": [
+              "guides/environment-setup",
+              "guides/running-locally",
+              "guides/database-migrations",
+              "guides/testing"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "guides/deployment/overview",
+              "guides/deployment/production-build",
+              "guides/deployment/environment-variables"
+            ]
+          },
+          {
+            "group": "Best Practices",
+            "pages": [
+              "guides/gitflow",
+              "guides/api-versioning",
+              "guides/security"
             ]
           }
         ]
       }
-    ],
-    "global": {
-      "anchors": [
-        {
-          "anchor": "Documentation",
-          "href": "https://mintlify.com/docs",
-          "icon": "book-open-cover"
-        },
-        {
-          "anchor": "Blog",
-          "href": "https://mintlify.com/blog",
-          "icon": "newspaper"
-        }
-      ]
-    }
-  },
-  "logo": {
-    "light": "/logo/light.svg",
-    "dark": "/logo/dark.svg"
-  },
-  "navbar": {
-    "links": [
-      {
-        "label": "Support",
-        "href": "mailto:hi@mintlify.com"
-      }
-    ],
-    "primary": {
-      "type": "button",
-      "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
-    }
-  },
-  "contextual": {
-    "options": [
-     "copy",
-     "view",
-     "chatgpt",
-     "claude",
-     "perplexity",
-     "mcp",
-     "cursor",
-     "vscode"
-   ]
-  },
-  "footer": {
-    "socials": {
-      "x": "https://x.com/mintlify",
-      "github": "https://github.com/mintlify",
-      "linkedin": "https://linkedin.com/company/mintlify"
-    }
+    ]
   }
 }

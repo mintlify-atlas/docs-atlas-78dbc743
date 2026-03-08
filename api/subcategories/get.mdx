@@ -1,0 +1,138 @@
+---
+title: 'Get Subcategory'
+api: 'GET /subcategories/{id}'
+description: 'Retrieve a specific subcategory by its ID'
+---
+
+This endpoint retrieves detailed information about a specific subcategory, including its related category.
+
+## Authentication
+
+This endpoint does not require authentication.
+
+## Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the subcategory to retrieve
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A success message confirming the retrieval
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="subcategory" type="object">
+      <Expandable title="subcategory">
+        <ResponseField name="id" type="integer">
+          Unique identifier for the subcategory
+        </ResponseField>
+        
+        <ResponseField name="name" type="string">
+          Name of the subcategory
+        </ResponseField>
+        
+        <ResponseField name="description" type="string">
+          Description of the subcategory (nullable)
+        </ResponseField>
+        
+        <ResponseField name="category" type="object">
+          The parent category information
+          <Expandable title="category">
+            <ResponseField name="id" type="integer">
+              Unique identifier for the category
+            </ResponseField>
+            
+            <ResponseField name="name" type="string">
+              Name of the category
+            </ResponseField>
+            
+            <ResponseField name="description" type="string">
+              Description of the category
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+        
+        <ResponseField name="created_at" type="string">
+          Timestamp when the subcategory was created
+        </ResponseField>
+        
+        <ResponseField name="updated_at" type="string">
+          Timestamp when the subcategory was last updated
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --location --request GET 'https://api.yourapp.com/subcategories/1' \
+--header 'Accept: application/json'
+```
+
+```javascript JavaScript
+fetch('https://api.yourapp.com/subcategories/1', {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = 'https://api.yourapp.com/subcategories/1'
+headers = {
+    'Accept': 'application/json'
+}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+print(data)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response
+{
+  "success": true,
+  "message": "Subcategory retrieved successfully",
+  "data": {
+    "subcategory": {
+      "id": 1,
+      "name": "Smartphones",
+      "description": "Mobile phones and related accessories",
+      "category": {
+        "id": 1,
+        "name": "Electronics",
+        "description": "Electronic devices and components"
+      },
+      "created_at": "2024-03-08T09:15:00.000000Z",
+      "updated_at": "2024-03-08T09:15:00.000000Z"
+    }
+  }
+}
+```
+
+```json Not Found Response
+{
+  "success": false,
+  "message": "Subcategory not found",
+  "data": null
+}
+```
+
+</ResponseExample>

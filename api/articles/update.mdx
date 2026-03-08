@@ -1,0 +1,412 @@
+---
+title: 'Update Article'
+description: 'Update an existing article including images (Admin only)'
+---
+
+## Endpoint
+
+```
+PUT /articles/{id}
+```
+
+<Warning>
+  This endpoint requires authentication with a valid JWT token AND Admin role.
+</Warning>
+
+## Description
+
+Updates an existing article by ID. This endpoint allows administrators to modify article details and replace associated images.
+
+The endpoint:
+- Validates all input data according to business rules
+- Updates the article record in a database transaction
+- Replaces existing images with new ones if provided
+- Returns the updated article with all relationships
+
+<Note>
+  When images are provided in the update request, ALL existing images are deleted and replaced with the new ones. To keep existing images, don't include the `images` field in the request.
+</Note>
+
+## Authentication
+
+<ParamField header="Authorization" type="string" required>
+  Bearer token for authentication. Format: `Bearer YOUR_JWT_TOKEN`
+</ParamField>
+
+<Note>
+  User must have the **Admin** role. Regular users will receive a 403 Forbidden response.
+</Note>
+
+## Headers
+
+<ParamField header="Content-Type" type="string" required>
+  Must be `multipart/form-data` when uploading images, or `application/json` for data only
+</ParamField>
+
+<ParamField header="Accept-Language" type="string" default="en">
+  Language preference for response messages. Supported values: `en`, `es`
+</ParamField>
+
+<ParamField header="Accept" type="string" default="application/json">
+  Response content type
+</ParamField>
+
+## Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique ID of the article to update
+</ParamField>
+
+## Request Body Parameters
+
+<ParamField body="name" type="string" required>
+  Name of the article
+  
+  **Validation Rules:**
+  - Required
+  - Must be a string
+  - Minimum 3 characters
+</ParamField>
+
+<ParamField body="description" type="string" required>
+  Detailed description of the article
+  
+  **Validation Rules:**
+  - Required
+  - Must be a string
+  - Minimum 10 characters
+  - Maximum 255 characters
+</ParamField>
+
+<ParamField body="price" type="number" required>
+  Price of the article
+  
+  **Validation Rules:**
+  - Required
+  - Must be numeric
+  - Minimum value: 0
+</ParamField>
+
+<ParamField body="category_id" type="integer" required>
+  ID of the category this article belongs to
+  
+  **Validation Rules:**
+  - Required
+  - Must exist in the categories table
+</ParamField>
+
+<ParamField body="subcategory_id" type="integer" required>
+  ID of the subcategory this article belongs to
+  
+  **Validation Rules:**
+  - Required
+  - Must exist in the subcategories table
+</ParamField>
+
+<ParamField body="images" type="array">
+  Array of image files to upload (will replace ALL existing images)
+  
+  **Validation Rules:**
+  - Optional (nullable)
+  - Must be an array if provided
+  - Each image must meet the following criteria:
+    - Must be a valid image file
+    - Allowed formats: jpeg, png, jpg
+    - No maximum size limit (removed in update validation)
+</ParamField>
+
+## Response
+
+### Success Response (200 OK)
+
+<ResponseField name="success" type="boolean" required>
+  Always `true` for successful requests
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Success message indicating the article was updated
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <Expandable title="properties">
+    <ResponseField name="article" type="object" required>
+      The updated article object
+      
+      <Expandable title="properties">
+        <ResponseField name="id" type="integer" required>
+          Unique identifier for the article
+        </ResponseField>
+        
+        <ResponseField name="category_id" type="integer" required>
+          ID of the category
+        </ResponseField>
+        
+        <ResponseField name="subcategory_id" type="integer" required>
+          ID of the subcategory
+        </ResponseField>
+        
+        <ResponseField name="name" type="string" required>
+          Name of the article
+        </ResponseField>
+        
+        <ResponseField name="description" type="string" required>
+          Description of the article
+        </ResponseField>
+        
+        <ResponseField name="price" type="number" required>
+          Price of the article
+        </ResponseField>
+        
+        <ResponseField name="images" type="array">
+          Array of image objects (new images if provided, or existing images)
+          
+          <Expandable title="image object">
+            <ResponseField name="id" type="integer">
+              Image ID
+            </ResponseField>
+            
+            <ResponseField name="path" type="string">
+              Storage path to the image
+            </ResponseField>
+            
+            <ResponseField name="imageable_type" type="string">
+              Polymorphic type ("App\\Models\\Article")
+            </ResponseField>
+            
+            <ResponseField name="imageable_id" type="integer">
+              ID of the associated article
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash curl
+# Update with images
+curl -X PUT https://api.example.com/articles/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Accept: application/json" \
+  -H "Accept-Language: en" \
+  -F "name=Gaming Laptop RTX 4080" \
+  -F "description=Updated high-performance gaming laptop with RTX 4080 graphics card" \
+  -F "price=1799.99" \
+  -F "category_id=2" \
+  -F "subcategory_id=5" \
+  -F "images[]=@/path/to/new-laptop.jpg"
+
+# Update without images (keeps existing)
+curl -X PUT https://api.example.com/articles/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "name": "Gaming Laptop RTX 4080",
+    "description": "Updated high-performance gaming laptop with RTX 4080 graphics card",
+    "price": 1799.99,
+    "category_id": 2,
+    "subcategory_id": 5
+  }'
+```
+
+```javascript JavaScript
+// Update with images
+const formData = new FormData();
+formData.append('name', 'Gaming Laptop RTX 4080');
+formData.append('description', 'Updated high-performance gaming laptop with RTX 4080 graphics card');
+formData.append('price', '1799.99');
+formData.append('category_id', '2');
+formData.append('subcategory_id', '5');
+
+const fileInput = document.querySelector('input[type="file"]');
+for (let file of fileInput.files) {
+  formData.append('images[]', file);
+}
+
+const response = await fetch('https://api.example.com/articles/1', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+  },
+  body: formData
+});
+
+const data = await response.json();
+
+// Update without images (JSON)
+const response = await fetch('https://api.example.com/articles/1', {
+  method: 'PUT',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Gaming Laptop RTX 4080',
+    description: 'Updated high-performance gaming laptop with RTX 4080 graphics card',
+    price: 1799.99,
+    category_id: 2,
+    subcategory_id: 5
+  })
+});
+```
+
+```python Python
+import requests
+
+# Update with images
+files = [('images[]', open('/path/to/new-laptop.jpg', 'rb'))]
+
+data = {
+    'name': 'Gaming Laptop RTX 4080',
+    'description': 'Updated high-performance gaming laptop with RTX 4080 graphics card',
+    'price': 1799.99,
+    'category_id': 2,
+    'subcategory_id': 5
+}
+
+response = requests.put(
+    'https://api.example.com/articles/1',
+    headers={
+        'Authorization': 'Bearer YOUR_JWT_TOKEN',
+        'Accept': 'application/json'
+    },
+    data=data,
+    files=files
+)
+
+# Update without images
+response = requests.put(
+    'https://api.example.com/articles/1',
+    headers={
+        'Authorization': 'Bearer YOUR_JWT_TOKEN',
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+    },
+    json={
+        'name': 'Gaming Laptop RTX 4080',
+        'description': 'Updated high-performance gaming laptop with RTX 4080 graphics card',
+        'price': 1799.99,
+        'category_id': 2,
+        'subcategory_id': 5
+    }
+)
+```
+
+</CodeGroup>
+
+## Example Response
+
+### Success (200 OK)
+
+```json
+{
+  "success": true,
+  "message": "Article updated successfully",
+  "data": {
+    "article": {
+      "id": 1,
+      "category_id": 2,
+      "subcategory_id": 5,
+      "name": "Gaming Laptop RTX 4080",
+      "description": "Updated high-performance gaming laptop with RTX 4080 graphics card",
+      "price": 1799.99,
+      "images": [
+        {
+          "id": 3,
+          "path": "articles/article_image_1_1709912500.jpg",
+          "imageable_type": "App\\Models\\Article",
+          "imageable_id": 1
+        }
+      ]
+    }
+  }
+}
+```
+
+## Error Responses
+
+### 401 - Unauthorized
+
+```json
+{
+  "success": false,
+  "message": "Unauthenticated",
+  "errors": null
+}
+```
+
+### 403 - Forbidden (Not Admin)
+
+```json
+{
+  "success": false,
+  "message": "Forbidden. Admin role required",
+  "errors": null
+}
+```
+
+### 404 - Not Found
+
+```json
+{
+  "success": false,
+  "message": "Article not found",
+  "errors": null
+}
+```
+
+### 422 - Validation Error
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid",
+  "errors": {
+    "name": ["The name must be at least 3 characters."],
+    "price": ["The price must be a number."],
+    "category_id": ["The selected category is invalid."]
+  }
+}
+```
+
+### 500 - Internal Server Error
+
+```json
+{
+  "success": false,
+  "message": "Article update failed",
+  "errors": {
+    "exception": "Database transaction failed"
+  }
+}
+```
+
+## Implementation Notes
+
+- Uses database transactions to ensure atomicity
+- When new images are uploaded:
+  1. All existing images are deleted from storage
+  2. All existing image records are deleted from database
+  3. New images are uploaded and associated with the article
+- If no images are provided, existing images remain unchanged
+- Laravel's route model binding automatically handles 404 for non-existent article IDs
+- Old image files are permanently deleted from storage when replaced
+- Update validation is similar to create but without the 2MB size limit on images
+
+<Warning>
+  **Important**: Providing the `images` field will DELETE all existing images and replace them with the new ones. To keep existing images, omit the `images` field from your request entirely.
+</Warning>
+
+<Info>
+  **Source Code Reference**: `ArticleController::update()` at /home/daytona/workspace/source/app/Http/Controllers/ArticleController.php:226
+  
+  **Validation Rules**: `UpdateArticleRequest` at /home/daytona/workspace/source/app/Http/Requests/ArticleRequest/UpdateArticleRequest.php:24
+</Info>

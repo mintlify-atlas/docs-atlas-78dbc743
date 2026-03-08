@@ -1,0 +1,334 @@
+---
+title: Gitflow Workflow
+description: Learn how to use Gitflow for organized development in ServITech Backend API
+---
+
+# Gitflow Workflow
+
+ServITech Backend API uses **Gitflow** to organize development and maintain a clean, structured approach to version control. This guide explains the branch strategy and workflow used in the project.
+
+## Branch Strategy
+
+Gitflow uses two main branches and several supporting branch types:
+
+### Main Branches
+
+- **`main`** — Production-ready code. All releases are deployed from this branch.
+- **`dev`** — Integration branch for ongoing development. All features are merged here first.
+
+### Supporting Branches
+
+Gitflow uses the following supporting branch types:
+
+- **`feature/*`** — For developing new features
+- **`release/*`** — For preparing new production releases
+- **`bugfix/*`** — For fixing bugs found during development
+- **`hotfix/*`** — For critical fixes in production
+
+<Note>
+  All supporting branches are temporary and should be deleted after merging.
+</Note>
+
+## Getting Started with Gitflow
+
+<Steps>
+  <Step title="Initialize Gitflow">
+    Run the following command to configure Gitflow with default branch names:
+
+    ```bash
+    git flow init -d
+    ```
+
+    This automatically configures `main` and `dev` as your primary branches.
+  </Step>
+
+  <Step title="Verify Configuration">
+    Check that your branches are set up correctly:
+
+    ```bash
+    git branch
+    ```
+
+    You should see both `main` and `dev` branches.
+  </Step>
+</Steps>
+
+## Working with Features
+
+### Starting a New Feature
+
+When you start working on a new feature, create a feature branch from `dev`:
+
+```bash
+git flow feature start nombre-de-tu-feature
+```
+
+This creates a new branch called `feature/nombre-de-tu-feature` and switches to it.
+
+**Example:**
+
+```bash
+git flow feature start authentication-improvements
+```
+
+### Working on Your Feature
+
+Make your changes, commit them regularly:
+
+```bash
+git add .
+git commit -m "Add JWT token refresh functionality"
+```
+
+### Finishing a Feature
+
+When your feature is complete and tested:
+
+```bash
+git flow feature finish nombre-de-tu-feature
+```
+
+This will:
+1. Merge your feature branch into `dev`
+2. Delete the feature branch
+3. Switch you back to `dev`
+
+<Warning>
+  Make sure all tests pass before finishing a feature. All features are merged into `dev`, not `main`.
+</Warning>
+
+## Creating Releases
+
+### Starting a Release
+
+When `dev` contains all features for a release:
+
+```bash
+git flow release start v1.0.0
+```
+
+This creates a `release/v1.0.0` branch where you can:
+- Update version numbers
+- Fix last-minute bugs
+- Update documentation
+- Prepare release notes
+
+### Finishing a Release
+
+When the release is ready for production:
+
+```bash
+git flow release finish v1.0.0
+```
+
+This will:
+1. Merge the release into `main`
+2. Tag the release with the version number
+3. Merge the release back into `dev`
+4. Delete the release branch
+
+<Note>
+  You'll be prompted to enter a tag message. Include release notes and changelog information.
+</Note>
+
+## Handling Hotfixes
+
+### When to Use Hotfixes
+
+Use hotfixes for **critical bugs in production** that can't wait for the next release cycle.
+
+### Creating a Hotfix
+
+```bash
+git flow hotfix start v1.0.1
+```
+
+This creates a hotfix branch from `main`.
+
+### Finishing a Hotfix
+
+```bash
+git flow hotfix finish v1.0.1
+```
+
+This will:
+1. Merge the hotfix into `main`
+2. Tag the hotfix version
+3. Merge the hotfix into `dev`
+4. Delete the hotfix branch
+
+<Warning>
+  Only use hotfixes for production emergencies. Regular bugs should be fixed through feature or bugfix branches.
+</Warning>
+
+## Bugfixes During Development
+
+For bugs found during development (not in production):
+
+```bash
+git flow bugfix start fix-user-validation
+```
+
+Work on the fix and finish it:
+
+```bash
+git flow bugfix finish fix-user-validation
+```
+
+Bugfixes are merged into `dev` like features.
+
+## Best Practices
+
+### Branch Naming
+
+- Use descriptive, lowercase names
+- Separate words with hyphens
+- Keep names concise but meaningful
+
+**Good examples:**
+```bash
+feature/jwt-authentication
+feature/article-search
+bugfix/login-validation
+hotfix/security-patch
+```
+
+**Bad examples:**
+```bash
+feature/myFeature
+feature/update
+bugfix/fix
+```
+
+### Commit Messages
+
+- Write clear, descriptive commit messages
+- Focus on "why" rather than "what"
+- Use present tense ("Add" not "Added")
+- Keep the first line under 50 characters
+
+**Example:**
+
+```bash
+git commit -m "Add JWT token blacklisting for logout
+
+Implements token invalidation to prevent reuse of expired
+tokens after user logout. Fixes security issue #42."
+```
+
+### Before Merging
+
+<Steps>
+  <Step title="Run Tests">
+    Always run tests before finishing a feature:
+
+    ```bash
+    php artisan test
+    ```
+  </Step>
+
+  <Step title="Update from Dev">
+    If you've been working on a feature for a while, update from `dev`:
+
+    ```bash
+    git checkout dev
+    git pull
+    git checkout feature/your-feature
+    git merge dev
+    ```
+  </Step>
+
+  <Step title="Resolve Conflicts">
+    Fix any merge conflicts and test again before finishing the feature.
+  </Step>
+</Steps>
+
+## Contributing Workflow
+
+When contributing to ServITech:
+
+<Steps>
+  <Step title="Fork the Repository">
+    Create your own fork of the repository on GitHub.
+  </Step>
+
+  <Step title="Create a Feature Branch">
+    ```bash
+    git flow feature start nueva-funcionalidad
+    ```
+  </Step>
+
+  <Step title="Make Your Changes">
+    Develop your feature, write tests, and commit regularly.
+  </Step>
+
+  <Step title="Ensure Tests Pass">
+    ```bash
+    php artisan test
+    ```
+  </Step>
+
+  <Step title="Submit Pull Request">
+    Push your feature branch and create a pull request to the `dev` branch.
+  </Step>
+</Steps>
+
+<Note>
+  All pull requests should target the `dev` branch, never `main` directly.
+</Note>
+
+## Common Commands Reference
+
+```bash
+# Feature workflow
+git flow feature start <name>     # Start a new feature
+git flow feature finish <name>    # Finish and merge feature
+git flow feature list             # List all features
+
+# Release workflow
+git flow release start <version>  # Start a new release
+git flow release finish <version> # Finish and merge release
+
+# Hotfix workflow
+git flow hotfix start <version>   # Start a hotfix
+git flow hotfix finish <version>  # Finish and merge hotfix
+
+# Bugfix workflow
+git flow bugfix start <name>      # Start a bugfix
+git flow bugfix finish <name>     # Finish and merge bugfix
+```
+
+## Troubleshooting
+
+### Feature Branch Not Deleted
+
+If a feature branch wasn't deleted automatically:
+
+```bash
+git branch -d feature/branch-name
+```
+
+### Merge Conflicts
+
+If you encounter merge conflicts when finishing a feature:
+
+1. Gitflow will pause and show you the conflicts
+2. Resolve conflicts in the affected files
+3. Stage the resolved files: `git add .`
+4. Continue: `git flow feature finish <name>`
+
+### Accidentally Started on Wrong Branch
+
+If you started a feature from the wrong branch:
+
+```bash
+git checkout dev
+git flow feature start correct-feature-name
+git cherry-pick <commit-hash>  # Pick your commits
+```
+
+## Next Steps
+
+- Learn about [API Versioning](/guides/api-versioning) strategies
+- Review [Security Best Practices](/guides/security)
+- Check the [API Documentation](/api/overview)

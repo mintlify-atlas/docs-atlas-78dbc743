@@ -1,0 +1,196 @@
+---
+title: 'Create Subcategory'
+api: 'POST /subcategories'
+description: 'Create a new subcategory'
+---
+
+This endpoint creates a new subcategory with the provided information.
+
+## Authentication
+
+This endpoint does not require authentication.
+
+## Request Body
+
+<ParamField body="name" type="string" required>
+  Name of the subcategory
+  
+  **Validation:**
+  - Required
+  - Must be a string
+  - Maximum length: 255 characters
+</ParamField>
+
+<ParamField body="description" type="string">
+  Description of the subcategory
+  
+  **Validation:**
+  - Optional (nullable)
+  - Must be a string
+  - Maximum length: 1000 characters
+</ParamField>
+
+<ParamField body="category_id" type="integer" required>
+  ID of the parent category
+  
+  **Validation:**
+  - Required
+  - Must be a valid category ID that exists in the categories table
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A success message confirming the creation
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="subcategory" type="object">
+      <Expandable title="subcategory">
+        <ResponseField name="id" type="integer">
+          Unique identifier for the newly created subcategory
+        </ResponseField>
+        
+        <ResponseField name="name" type="string">
+          Name of the subcategory
+        </ResponseField>
+        
+        <ResponseField name="description" type="string">
+          Description of the subcategory (nullable)
+        </ResponseField>
+        
+        <ResponseField name="category" type="object">
+          The parent category information
+          <Expandable title="category">
+            <ResponseField name="id" type="integer">
+              Unique identifier for the category
+            </ResponseField>
+            
+            <ResponseField name="name" type="string">
+              Name of the category
+            </ResponseField>
+            
+            <ResponseField name="description" type="string">
+              Description of the category
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+        
+        <ResponseField name="created_at" type="string">
+          Timestamp when the subcategory was created
+        </ResponseField>
+        
+        <ResponseField name="updated_at" type="string">
+          Timestamp when the subcategory was last updated
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --location --request POST 'https://api.yourapp.com/subcategories' \
+--header 'Content-Type: application/json' \
+--header 'Accept: application/json' \
+--data-raw '{
+  "name": "Smartphones",
+  "description": "Mobile phones and related accessories",
+  "category_id": 1
+}'
+```
+
+```javascript JavaScript
+fetch('https://api.yourapp.com/subcategories', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'Smartphones',
+    description: 'Mobile phones and related accessories',
+    category_id: 1
+  })
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+import json
+
+url = 'https://api.yourapp.com/subcategories'
+headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}
+payload = {
+    'name': 'Smartphones',
+    'description': 'Mobile phones and related accessories',
+    'category_id': 1
+}
+
+response = requests.post(url, headers=headers, data=json.dumps(payload))
+data = response.json()
+print(data)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (201 Created)
+{
+  "success": true,
+  "message": "Subcategory created successfully",
+  "data": {
+    "subcategory": {
+      "id": 1,
+      "name": "Smartphones",
+      "description": "Mobile phones and related accessories",
+      "category": {
+        "id": 1,
+        "name": "Electronics",
+        "description": "Electronic devices and components"
+      },
+      "created_at": "2024-03-08T09:15:00.000000Z",
+      "updated_at": "2024-03-08T09:15:00.000000Z"
+    }
+  }
+}
+```
+
+```json Validation Error (422 Unprocessable Entity)
+{
+  "success": false,
+  "message": "The given data was invalid",
+  "errors": {
+    "name": [
+      "The name field is required."
+    ],
+    "category_id": [
+      "The selected category id is invalid."
+    ]
+  }
+}
+```
+
+```json Server Error (500 Internal Server Error)
+{
+  "success": false,
+  "message": "Subcategory creation failed",
+  "errors": {
+    "exception": "Database connection error"
+  }
+}
+```
+
+</ResponseExample>

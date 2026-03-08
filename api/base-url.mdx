@@ -1,0 +1,178 @@
+---
+title: Base URL Configuration
+description: API base URLs and environment configuration
+---
+
+## Overview
+
+The ServITech Backend API base URL varies depending on the environment where the application is deployed. All API endpoints should be prefixed with the base URL and `/api` path.
+
+## Environment Configuration
+
+The base URL is configured in the `.env` file using the `APP_URL` variable.
+
+### Local Development
+
+For local development, the default configuration is:
+
+```bash
+APP_URL=http://localhost:8000
+```
+
+**Complete API Base URL:**
+```
+http://localhost:8000/api
+```
+
+### Production
+
+For production environments, update the `APP_URL` to your production domain:
+
+```bash
+APP_URL=https://api.servitech.com
+```
+
+**Complete API Base URL:**
+```
+https://api.servitech.com/api
+```
+
+## Making Requests
+
+All API requests should be made to the base URL followed by the specific endpoint path.
+
+<CodeGroup>
+```bash cURL
+# Local Development
+curl -X GET "http://localhost:8000/api/articles" \
+  -H "Accept: application/json"
+
+# Production
+curl -X GET "https://api.servitech.com/api/articles" \
+  -H "Accept: application/json"
+```
+
+```javascript JavaScript
+// Local Development
+const BASE_URL = 'http://localhost:8000/api';
+
+// Production
+// const BASE_URL = 'https://api.servitech.com/api';
+
+fetch(`${BASE_URL}/articles`, {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json',
+    'Content-Type': 'application/json'
+  }
+})
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+# Local Development
+BASE_URL = 'http://localhost:8000/api'
+
+# Production
+# BASE_URL = 'https://api.servitech.com/api'
+
+response = requests.get(
+    f'{BASE_URL}/articles',
+    headers={'Accept': 'application/json'}
+)
+
+data = response.json()
+print(data)
+```
+
+```php PHP
+<?php
+// Local Development
+$baseUrl = 'http://localhost:8000/api';
+
+// Production
+// $baseUrl = 'https://api.servitech.com/api';
+
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, $baseUrl . '/articles');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Accept: application/json'
+]);
+
+$response = curl_exec($ch);
+$data = json_decode($response, true);
+curl_close($ch);
+
+print_r($data);
+?>
+```
+</CodeGroup>
+
+## Environment Variables
+
+The following environment variables affect the API configuration:
+
+| Variable | Description | Default Value |
+|----------|-------------|---------------|
+| `APP_NAME` | Application name | ServITech |
+| `APP_VERSION` | Application version | 1.0.0 |
+| `APP_ENV` | Environment (local, production) | local |
+| `APP_URL` | Base application URL | http://localhost:8000 |
+| `APP_LOCALE` | Default language | es |
+| `APP_FALLBACK_LOCALE` | Fallback language | en |
+| `APP_DEBUG` | Debug mode (true/false) | true |
+
+## API Documentation URL
+
+The API also exposes automatically generated documentation via Scramble:
+
+```
+Local: http://localhost:8000/docs/api
+Production: https://api.servitech.com/docs/api
+```
+
+This route is configured via the `SCRAMBLE_API_ROUTE` environment variable.
+
+## CORS Configuration
+
+When making requests from a web browser, ensure that CORS (Cross-Origin Resource Sharing) is properly configured on the server to allow requests from your frontend domain.
+
+<Note>
+  In development, you may need to configure CORS to allow requests from `http://localhost:3000` or your frontend development server.
+</Note>
+
+## HTTPS Requirements
+
+<Warning>
+  In production environments, always use HTTPS to ensure secure communication between clients and the API. Never transmit sensitive information (passwords, tokens) over unencrypted HTTP connections.
+</Warning>
+
+## Testing the Connection
+
+To verify your API connection, make a simple GET request to a public endpoint:
+
+<CodeGroup>
+```bash cURL
+curl -X GET "http://localhost:8000/api/articles" \
+  -H "Accept: application/json" \
+  -H "Accept-Language: en"
+```
+
+```javascript JavaScript
+fetch('http://localhost:8000/api/articles', {
+  headers: {
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+  }
+})
+  .then(res => res.json())
+  .then(data => console.log('API is working:', data))
+  .catch(err => console.error('API error:', err));
+```
+</CodeGroup>
+
+A successful response indicates that your API is properly configured and accessible.

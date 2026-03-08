@@ -1,0 +1,209 @@
+---
+title: 'Create Category'
+openapi: 'POST /category'
+---
+
+<Warning>
+  **ADMIN ACCESS REQUIRED** - This endpoint requires authentication with an ADMIN role.
+</Warning>
+
+## Overview
+
+Creates a new category in the system. Categories are used to organize articles and subcategories.
+
+## Authentication
+
+This endpoint requires:
+- Valid JWT token in the `Authorization` header
+- User must have **ADMIN** role
+
+## Request Body
+
+<ParamField body="name" type="string" required>
+  The name of the category. Must be unique.
+  - **Required**: Yes
+  - **Type**: String
+  - **Max Length**: 255 characters
+</ParamField>
+
+<ParamField body="description" type="string">
+  Optional description of the category.
+  - **Required**: No
+  - **Type**: String
+  - **Max Length**: 255 characters
+</ParamField>
+
+## Validation Rules
+
+- `name`: Required, string, maximum 255 characters
+- `description`: Optional (nullable), string, maximum 255 characters
+
+## Response
+
+<ResponseField name="success" type="boolean" required>
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Success message indicating the category was created
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  <ResponseField name="category" type="object" required>
+    The newly created category object
+    <ResponseField name="id" type="integer" required>
+      Unique identifier for the category
+    </ResponseField>
+    <ResponseField name="name" type="string" required>
+      Category name (max 255 characters)
+    </ResponseField>
+    <ResponseField name="description" type="string">
+      Optional category description (max 255 characters)
+    </ResponseField>
+    <ResponseField name="created_at" type="string" required>
+      Timestamp when the category was created
+    </ResponseField>
+    <ResponseField name="updated_at" type="string" required>
+      Timestamp when the category was last updated
+    </ResponseField>
+    <ResponseField name="deleted_at" type="string">
+      Timestamp when the category was soft deleted (null for new categories)
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.example.com/category" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -H "Accept-Language: en" \
+  -d '{
+    "name": "Hardware",
+    "description": "Hardware related issues and repairs"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.example.com/category', {
+  method: 'POST',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+  },
+  body: JSON.stringify({
+    name: 'Hardware',
+    description: 'Hardware related issues and repairs'
+  })
+});
+
+const data = await response.json();
+console.log(data.data.category);
+```
+
+```python Python
+import requests
+import json
+
+headers = {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+}
+
+payload = {
+    'name': 'Hardware',
+    'description': 'Hardware related issues and repairs'
+}
+
+response = requests.post(
+    'https://api.example.com/category',
+    headers=headers,
+    data=json.dumps(payload)
+)
+
+data = response.json()
+print(data['data']['category'])
+```
+
+</CodeGroup>
+
+## Response Examples
+
+### Success Response (201 Created)
+
+```json
+{
+  "success": true,
+  "message": "Category created successfully",
+  "data": {
+    "category": {
+      "id": 3,
+      "name": "Hardware",
+      "description": "Hardware related issues and repairs",
+      "created_at": "2026-03-08T12:45:00.000000Z",
+      "updated_at": "2026-03-08T12:45:00.000000Z",
+      "deleted_at": null
+    }
+  }
+}
+```
+
+### Validation Error Response (422 Unprocessable Entity)
+
+Returned when validation fails:
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "name": [
+      "The name field is required."
+    ]
+  }
+}
+```
+
+### Unauthorized Response (401 Unauthorized)
+
+```json
+{
+  "success": false,
+  "message": "Unauthenticated"
+}
+```
+
+### Forbidden Response (403 Forbidden)
+
+Returned when the authenticated user does not have ADMIN role:
+
+```json
+{
+  "success": false,
+  "message": "Unauthorized. Admin access required."
+}
+```
+
+## Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 201 | Success - Category created |
+| 401 | Unauthorized - Invalid or missing JWT token |
+| 403 | Forbidden - User does not have ADMIN role |
+| 422 | Validation Error - Invalid input data |
+| 500 | Internal Server Error |
+
+## Notes
+
+- The category name should be unique across the system
+- Categories can have multiple subcategories and articles associated with them
+- Soft deletes are enabled, so deleted categories are marked with a `deleted_at` timestamp rather than being permanently removed

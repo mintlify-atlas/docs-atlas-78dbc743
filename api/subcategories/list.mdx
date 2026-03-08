@@ -1,0 +1,139 @@
+---
+title: 'List All Subcategories'
+api: 'GET /subcategories'
+description: 'Retrieve a list of all subcategories ordered by ID in descending order'
+---
+
+This endpoint retrieves all subcategories from the database with their related category information.
+
+## Authentication
+
+This endpoint does not require authentication.
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A success message confirming the retrieval
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <Expandable title="data">
+    <ResponseField name="subcategories" type="array">
+      Array of subcategory objects
+      <Expandable title="subcategory">
+        <ResponseField name="id" type="integer">
+          Unique identifier for the subcategory
+        </ResponseField>
+        
+        <ResponseField name="name" type="string">
+          Name of the subcategory
+        </ResponseField>
+        
+        <ResponseField name="description" type="string">
+          Description of the subcategory (nullable)
+        </ResponseField>
+        
+        <ResponseField name="category" type="object">
+          The parent category information
+          <Expandable title="category">
+            <ResponseField name="id" type="integer">
+              Unique identifier for the category
+            </ResponseField>
+            
+            <ResponseField name="name" type="string">
+              Name of the category
+            </ResponseField>
+            
+            <ResponseField name="description" type="string">
+              Description of the category
+            </ResponseField>
+          </Expandable>
+        </ResponseField>
+        
+        <ResponseField name="created_at" type="string">
+          Timestamp when the subcategory was created
+        </ResponseField>
+        
+        <ResponseField name="updated_at" type="string">
+          Timestamp when the subcategory was last updated
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --location --request GET 'https://api.yourapp.com/subcategories' \
+--header 'Accept: application/json'
+```
+
+```javascript JavaScript
+fetch('https://api.yourapp.com/subcategories', {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = 'https://api.yourapp.com/subcategories'
+headers = {
+    'Accept': 'application/json'
+}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+print(data)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Response
+{
+  "success": true,
+  "message": "All subcategories retrieved successfully",
+  "data": {
+    "subcategories": [
+      {
+        "id": 2,
+        "name": "Laptops",
+        "description": "Laptop computers and accessories",
+        "category": {
+          "id": 1,
+          "name": "Electronics",
+          "description": "Electronic devices and components"
+        },
+        "created_at": "2024-03-08T10:30:00.000000Z",
+        "updated_at": "2024-03-08T10:30:00.000000Z"
+      },
+      {
+        "id": 1,
+        "name": "Smartphones",
+        "description": "Mobile phones and related accessories",
+        "category": {
+          "id": 1,
+          "name": "Electronics",
+          "description": "Electronic devices and components"
+        },
+        "created_at": "2024-03-08T09:15:00.000000Z",
+        "updated_at": "2024-03-08T09:15:00.000000Z"
+      }
+    ]
+  }
+}
+```
+
+</ResponseExample>

@@ -1,0 +1,96 @@
+---
+title: 'Delete Subcategory'
+api: 'DELETE /subcategories/{id}'
+description: 'Delete a subcategory by its ID'
+---
+
+This endpoint deletes a specific subcategory from the database. The subcategory is soft-deleted, meaning it's marked as deleted but not permanently removed from the database.
+
+## Authentication
+
+This endpoint does not require authentication.
+
+## Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the subcategory to delete
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  A success message confirming the deletion
+</ResponseField>
+
+<RequestExample>
+
+```bash cURL
+curl --location --request DELETE 'https://api.yourapp.com/subcategories/1' \
+--header 'Accept: application/json'
+```
+
+```javascript JavaScript
+fetch('https://api.yourapp.com/subcategories/1', {
+  method: 'DELETE',
+  headers: {
+    'Accept': 'application/json'
+  }
+})
+.then(response => response.json())
+.then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+url = 'https://api.yourapp.com/subcategories/1'
+headers = {
+    'Accept': 'application/json'
+}
+
+response = requests.delete(url, headers=headers)
+data = response.json()
+print(data)
+```
+
+</RequestExample>
+
+<ResponseExample>
+
+```json Success Response (200 OK)
+{
+  "success": true,
+  "message": "Subcategory deleted successfully",
+  "data": null
+}
+```
+
+```json Not Found Response (404 Not Found)
+{
+  "success": false,
+  "message": "Subcategory not found",
+  "data": null
+}
+```
+
+```json Server Error (500 Internal Server Error)
+{
+  "success": false,
+  "message": "Subcategory deletion failed",
+  "errors": {
+    "exception": "Cannot delete subcategory with existing articles"
+  }
+}
+```
+
+</ResponseExample>
+
+## Notes
+
+- The Subcategory model uses soft deletes (`SoftDeletes` trait), so deleted subcategories are not permanently removed from the database.
+- Soft-deleted records have their `deleted_at` timestamp set and are excluded from normal queries.
+- If the subcategory has related articles, the deletion may fail depending on your database foreign key constraints.

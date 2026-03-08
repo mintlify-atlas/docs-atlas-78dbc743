@@ -1,0 +1,190 @@
+---
+title: Login
+description: Authenticate a user and receive a JWT token
+---
+
+# Login
+
+Authenticate a user with email and password to receive a JWT access token.
+
+## Endpoint
+
+```
+POST /auth/login
+```
+
+## Request
+
+<ParamField path="email" type="string" required>
+  User's email address. Must be a valid email format.
+</ParamField>
+
+<ParamField path="password" type="string" required>
+  User's password. Must be at least 8 characters.
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates whether the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message indicating the user logged in successfully
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Response data containing user information and authentication token
+  
+  <Expandable title="properties">
+    <ResponseField name="user" type="object">
+      User object containing profile information
+      
+      <Expandable title="properties">
+        <ResponseField name="id" type="integer">
+          User ID
+        </ResponseField>
+        
+        <ResponseField name="role" type="string">
+          User's role (e.g., "USER", "ADMIN")
+        </ResponseField>
+        
+        <ResponseField name="name" type="string">
+          User's full name
+        </ResponseField>
+        
+        <ResponseField name="email" type="string">
+          User's email address
+        </ResponseField>
+        
+        <ResponseField name="phone" type="string">
+          User's phone number
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="token" type="string">
+      JWT access token for authentication
+    </ResponseField>
+    
+    <ResponseField name="expires_in" type="integer">
+      Token expiration time in seconds (typically 3600)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Example Request
+
+<CodeGroup>
+
+```bash curl
+curl -X POST https://api.example.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.example.com/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    password: 'password123'
+  })
+});
+
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+response = requests.post(
+    'https://api.example.com/auth/login',
+    json={
+        'email': 'user@example.com',
+        'password': 'password123'
+    }
+)
+
+data = response.json()
+```
+
+</CodeGroup>
+
+## Example Response
+
+```json
+{
+  "success": true,
+  "message": "User logged in successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "role": "USER",
+      "name": "John Doe",
+      "email": "user@example.com",
+      "phone": "+1234567890"
+    },
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "expires_in": 3600
+  }
+}
+```
+
+## Error Responses
+
+<Accordion title="400 Bad Request - User not found">
+```json
+{
+  "success": false,
+  "message": "We can't find a user with that email address.",
+  "errors": {
+    "email": "We can't find a user with that email address."
+  }
+}
+```
+</Accordion>
+
+<Accordion title="401 Unauthorized - Invalid password">
+```json
+{
+  "success": false,
+  "message": "These credentials do not match our records.",
+  "errors": {
+    "password": "These credentials do not match our records."
+  }
+}
+```
+</Accordion>
+
+<Accordion title="422 Validation Error - Invalid email format">
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": [
+      "The email must be a valid email address."
+    ]
+  }
+}
+```
+</Accordion>
+
+<Accordion title="422 Validation Error - Password too short">
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "password": [
+      "The password must be at least 8 characters."
+    ]
+  }
+}
+```
+</Accordion>

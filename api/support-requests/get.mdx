@@ -1,0 +1,193 @@
+---
+title: 'Get Support Request'
+description: 'Retrieve a specific support request by ID'
+---
+
+<Note>
+  This endpoint requires authentication. Users can only view their own support requests.
+</Note>
+
+## Endpoint
+
+<api-endpoint>
+  <method>GET</method>
+  <url>/support-request/{id}</url>
+</api-endpoint>
+
+```http
+GET /support-request/{id}
+```
+
+## Authentication
+
+This endpoint requires a valid JWT token. Include the token in the Authorization header:
+
+```
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+## Path Parameters
+
+<ParamField path="id" type="integer" required>
+  The unique identifier of the support request to retrieve
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean" required>
+  Indicates whether the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  A human-readable message describing the result
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  The response data object
+  
+  <Expandable title="data properties">
+    <ResponseField name="supportRequest" type="object" required>
+      The support request object
+      
+      <Expandable title="SupportRequest properties">
+        <ResponseField name="id" type="integer" required>
+          Unique identifier for the support request
+        </ResponseField>
+        
+        <ResponseField name="user_id" type="integer" required>
+          ID of the user who created the support request
+        </ResponseField>
+        
+        <ResponseField name="date" type="string" required>
+          Date and time of the support request in ISO 8601 format
+        </ResponseField>
+        
+        <ResponseField name="location" type="string" required>
+          Location where the support is needed
+        </ResponseField>
+        
+        <ResponseField name="detail" type="string" required>
+          Detailed description of the support request
+        </ResponseField>
+        
+        <ResponseField name="created_at" type="string" required>
+          Timestamp when the support request was created
+        </ResponseField>
+        
+        <ResponseField name="updated_at" type="string" required>
+          Timestamp when the support request was last updated
+        </ResponseField>
+        
+        <ResponseField name="deleted_at" type="string | null">
+          Timestamp when the support request was soft deleted (null if not deleted)
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Response Examples
+
+<CodeGroup>
+
+```json 200 OK
+{
+  "success": true,
+  "message": "Support request retrieved successfully",
+  "data": {
+    "supportRequest": {
+      "id": 1,
+      "user_id": 1,
+      "date": "2026-03-15T10:30:00.000000Z",
+      "location": "Building A, Room 305",
+      "detail": "Network connectivity issues in the conference room. Unable to connect to WiFi.",
+      "created_at": "2026-03-08T14:22:10.000000Z",
+      "updated_at": "2026-03-08T14:22:10.000000Z",
+      "deleted_at": null
+    }
+  }
+}
+```
+
+```json 401 Unauthorized
+{
+  "success": false,
+  "message": "These credentials do not match our records.",
+  "data": null
+}
+```
+
+```json 404 Not Found
+{
+  "success": false,
+  "message": "Support request not found",
+  "data": null
+}
+```
+
+</CodeGroup>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash curl
+curl -X GET https://api.example.com/support-request/1 \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Accept: application/json" \
+  -H "Accept-Language: en"
+```
+
+```javascript JavaScript
+const supportRequestId = 1;
+
+const response = await fetch(`https://api.example.com/support-request/${supportRequestId}`, {
+  method: 'GET',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+  }
+});
+
+const data = await response.json();
+console.log(data.data.supportRequest);
+```
+
+```python Python
+import requests
+
+support_request_id = 1
+
+response = requests.get(
+    f'https://api.example.com/support-request/{support_request_id}',
+    headers={
+        'Authorization': 'Bearer YOUR_JWT_TOKEN',
+        'Accept': 'application/json',
+        'Accept-Language': 'en'
+    }
+)
+
+data = response.json()
+print(data['data']['supportRequest'])
+```
+
+</CodeGroup>
+
+## Error Responses
+
+<ResponseField name="401 Unauthorized">
+  Returned when the request is made without a valid JWT token or the token has expired
+</ResponseField>
+
+<ResponseField name="404 Not Found">
+  Returned when:
+  - The support request with the specified ID does not exist
+  - The support request belongs to a different user (ownership check)
+</ResponseField>
+
+## Notes
+
+- Users can only retrieve their own support requests
+- If a user attempts to access another user's support request, a 404 Not Found error is returned (not 403 Forbidden) for security reasons
+- The endpoint uses Laravel's route model binding for automatic model retrieval

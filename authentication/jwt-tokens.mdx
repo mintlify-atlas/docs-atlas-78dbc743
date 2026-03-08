@@ -1,0 +1,279 @@
+---
+title: 'JWT Tokens'
+description: 'Understanding JWT token lifecycle, storage, and security'
+---
+
+## Overview
+
+ServITech uses **JWT (JSON Web Tokens)** for stateless authentication. Tokens are generated upon successful login and must be included in the `Authorization` header for protected endpoints.
+
+## Token Generation
+
+When you successfully authenticate via the `/auth/login` endpoint, the API returns:
+
+```json
+{
+  "success": true,
+  "message": "User logged in successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "role": "USER",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+1234567890"
+    },
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "expires_in": 3600
+  }
+}
+```
+
+<ResponseField name="token" type="string" required>
+  The JWT access token for authentication
+</ResponseField>
+
+<ResponseField name="expires_in" type="integer" required>
+  Token lifetime in seconds (default: 3600 seconds = 1 hour)
+</ResponseField>
+
+## Token Structure
+
+JWT tokens consist of three parts separated by dots:
+
+```
+header.payload.signature
+```
+
+### Header
+
+Contains token type and signing algorithm:
+
+```json
+{
+  "typ": "JWT",
+  "alg": "HS256"
+}
+```
+
+### Payload
+
+Contains user claims and metadata:
+
+```json
+{
+  "iss": "https://api.servitech.com",
+  "iat": 1709913600,
+  "exp": 1709917200,
+  "nbf": 1709913600,
+  "jti": "a7b3c9d1e5f2",
+  "sub": 1,
+  "prv": "87e0af1e..."
+}
+```
+
+<ParamField path="iss" type="string">
+  Issuer - The API that issued the token
+</ParamField>
+
+<ParamField path="iat" type="integer">
+  Issued At - Unix timestamp when token was created
+</ParamField>
+
+<ParamField path="exp" type="integer">
+  Expiration - Unix timestamp when token expires
+</ParamField>
+
+<ParamField path="nbf" type="integer">
+  Not Before - Token is not valid before this timestamp
+</ParamField>
+
+<ParamField path="sub" type="integer">
+  Subject - The user ID the token belongs to
+</ParamField>
+
+<ParamField path="jti" type="string">
+  JWT ID - Unique identifier for this token
+</ParamField>
+
+### Signature
+
+Created using the header, payload, and secret key defined in `JWT_SECRET` environment variable.
+
+## Token Configuration
+
+Configuration is managed in `config/jwt.php`:
+
+| Setting | Environment Variable | Default | Description |
+|---------|---------------------|---------|-------------|
+| Time to Live (TTL) | `JWT_TTL` | 60 minutes | Token expiration time |
+| Refresh TTL | `JWT_REFRESH_TTL` | 20160 minutes (2 weeks) | Refresh window after expiration |
+| Algorithm | `JWT_ALGO` | HS256 | Signing algorithm |
+| Blacklist Enabled | `JWT_BLACKLIST_ENABLED` | true | Enable token blacklisting on logout |
+| Leeway | `JWT_LEEWAY` | 0 seconds | Clock skew tolerance |
+| Secret | `JWT_SECRET` | - | Secret key for signing (required) |
+
+<Warning>
+  Never expose your `JWT_SECRET` in client-side code or public repositories. Keep it secure in your `.env` file.
+</Warning>
+
+## Using Tokens
+
+Include the JWT token in the `Authorization` header with the `Bearer` scheme:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "https://api.servitech.com/user/profile" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept: application/json"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.servitech.com/user/profile', {
+  method: 'GET',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/json'
+  }
+});
+
+const data = await response.json();
+```
+
+```python Python
+import requests
+
+headers = {
+    'Authorization': f'Bearer {token}',
+    'Accept': 'application/json'
+}
+
+response = requests.get(
+    'https://api.servitech.com/user/profile',
+    headers=headers
+)
+
+data = response.json()
+```
+
+</CodeGroup>
+
+## Token Storage
+
+### Web Applications
+
+For web applications, store tokens securely:
+
+**Recommended approaches:**
+
+1. **HttpOnly Cookies** (most secure)
+   - Not accessible via JavaScript
+   - Automatic inclusion in requests
+   - Protected from XSS attacks
+
+2. **Memory/State Management** (e.g., Redux, Vuex)
+   - Token lost on page refresh
+   - Requires re-authentication
+   - Safe from XSS if properly implemented
+
+**Not recommended:**
+
+- ❌ localStorage (vulnerable to XSS attacks)
+- ❌ sessionStorage (vulnerable to XSS attacks)
+
+### Mobile Applications
+
+For mobile apps:
+
+- **iOS**: Use Keychain Services
+- **Android**: Use EncryptedSharedPreferences
+- **React Native**: Use react-native-keychain or expo-secure-store
+
+## Token Expiration
+
+Tokens expire after the configured TTL (default: 60 minutes).
+
+### Handling Expired Tokens
+
+When a token expires, the API returns:
+
+```json
+{
+  "success": false,
+  "message": "Token has expired",
+  "errors": {}
+}
+```
+
+HTTP Status: `401 Unauthorized`
+
+### Token Refresh
+
+While the current implementation doesn't expose a dedicated refresh endpoint, you can:
+
+1. **Re-authenticate** - Use the `/auth/login` endpoint to get a new token
+2. **Implement refresh logic** - Request a new token before expiration
+
+<Note>
+  The refresh window (`JWT_REFRESH_TTL`) is 2 weeks by default. This setting is primarily for internal package behavior.
+</Note>
+
+## Token Blacklisting
+
+When a user logs out via `/auth/logout`, the token is added to a blacklist:
+
+- **Blacklist Enabled**: `JWT_BLACKLIST_ENABLED=true` (default)
+- **Grace Period**: `JWT_BLACKLIST_GRACE_PERIOD=0` seconds (default)
+
+Blacklisted tokens cannot be used for authentication, even if they haven't expired.
+
+### Database Storage
+
+Blacklisted tokens are stored in the database (via the configured storage provider) and checked on each authenticated request.
+
+## Security Best Practices
+
+<AccordionGroup>
+  <Accordion title="Always use HTTPS" icon="lock">
+    Never transmit tokens over unencrypted HTTP connections. Always use HTTPS in production to prevent token interception.
+  </Accordion>
+  
+  <Accordion title="Implement token expiration" icon="clock">
+    Use reasonable TTL values (30-60 minutes recommended). Shorter lifetimes reduce the window for token abuse.
+  </Accordion>
+  
+  <Accordion title="Validate tokens on every request" icon="shield-check">
+    The API automatically validates tokens using the `auth:api` middleware. Never skip this validation.
+  </Accordion>
+  
+  <Accordion title="Rotate secrets regularly" icon="arrows-rotate">
+    Periodically rotate your `JWT_SECRET` and invalidate all existing tokens by requiring re-authentication.
+  </Accordion>
+  
+  <Accordion title="Monitor for suspicious activity" icon="eye">
+    Log authentication events and monitor for unusual patterns (e.g., tokens used from multiple IPs).
+  </Accordion>
+</AccordionGroup>
+
+## Error Handling
+
+Common JWT-related errors:
+
+| Error | HTTP Status | Description | Solution |
+|-------|-------------|-------------|----------|
+| Token has expired | 401 | Token TTL exceeded | Re-authenticate to get a new token |
+| Token invalid | 401 | Malformed or tampered token | Verify token format and signature |
+| Token not found | 401 | No Authorization header | Include token in request header |
+| Token blacklisted | 401 | Token was invalidated via logout | Re-authenticate to get a new token |
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="right-to-bracket" href="/authentication/login">
+    Get a JWT token by logging in
+  </Card>
+  <Card title="Logout" icon="right-from-bracket" href="/authentication/login#logout">
+    Invalidate your token
+  </Card>
+</CardGroup>

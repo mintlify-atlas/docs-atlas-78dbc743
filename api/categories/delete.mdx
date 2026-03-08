@@ -1,0 +1,141 @@
+---
+title: 'Delete Category'
+openapi: 'DELETE /category/{name}'
+---
+
+<Warning>
+  **ADMIN ACCESS REQUIRED** - This endpoint requires authentication with an ADMIN role.
+</Warning>
+
+## Overview
+
+Deletes a category from the system. This performs a soft delete, marking the category with a `deleted_at` timestamp rather than permanently removing it from the database.
+
+## Authentication
+
+This endpoint requires:
+- Valid JWT token in the `Authorization` header
+- User must have **ADMIN** role
+
+## Request
+
+<ParamField path="name" type="string" required>
+  The name of the category to delete. This is used as the route parameter.
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean" required>
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Success message indicating the category was deleted
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X DELETE "https://api.example.com/category/Hardware" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Accept: application/json" \
+  -H "Accept-Language: en"
+```
+
+```javascript JavaScript
+const categoryName = 'Hardware';
+const response = await fetch(`https://api.example.com/category/${categoryName}`, {
+  method: 'DELETE',
+  headers: {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+  }
+});
+
+const data = await response.json();
+console.log(data.message);
+```
+
+```python Python
+import requests
+
+category_name = 'Hardware'
+headers = {
+    'Authorization': 'Bearer YOUR_JWT_TOKEN',
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+}
+
+response = requests.delete(
+    f'https://api.example.com/category/{category_name}',
+    headers=headers
+)
+
+data = response.json()
+print(data['message'])
+```
+
+</CodeGroup>
+
+## Response Examples
+
+### Success Response (200 OK)
+
+```json
+{
+  "success": true,
+  "message": "Category deleted successfully"
+}
+```
+
+### Not Found Response (404 Not Found)
+
+Returned when the category with the specified name does not exist:
+
+```json
+{
+  "success": false,
+  "message": "Category not found"
+}
+```
+
+### Unauthorized Response (401 Unauthorized)
+
+```json
+{
+  "success": false,
+  "message": "Unauthenticated"
+}
+```
+
+### Forbidden Response (403 Forbidden)
+
+Returned when the authenticated user does not have ADMIN role:
+
+```json
+{
+  "success": false,
+  "message": "Unauthorized. Admin access required."
+}
+```
+
+## Error Codes
+
+| Status Code | Description |
+|-------------|-------------|
+| 200 | Success - Category deleted |
+| 401 | Unauthorized - Invalid or missing JWT token |
+| 403 | Forbidden - User does not have ADMIN role |
+| 404 | Not Found - Category does not exist |
+| 500 | Internal Server Error |
+
+## Notes
+
+- This endpoint performs a **soft delete**. The category record is not permanently removed from the database
+- Instead, the `deleted_at` timestamp is set to the current time
+- Soft-deleted categories can potentially be restored by database administrators
+- Associated subcategories and articles may be affected by the deletion
+- Consider checking for dependencies before deleting a category that may be in use

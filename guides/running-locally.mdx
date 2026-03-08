@@ -1,0 +1,397 @@
+---
+title: Running Locally
+description: Start the ServITech Backend API and all required services on your local machine
+---
+
+This guide covers how to run the ServITech Backend API locally for development, including the web server, queue worker, and asset compilation.
+
+## Prerequisites
+
+Before running the application locally, ensure you have:
+
+<Check>
+  ✓ Completed the [Environment Setup](/guides/environment-setup)
+</Check>
+
+<Check>
+  ✓ Installed all PHP and Node.js dependencies
+</Check>
+
+<Check>
+  ✓ Configured your `.env` file with database credentials
+</Check>
+
+<Check>
+  ✓ Run database migrations (see [Database Migrations](/guides/database-migrations))
+</Check>
+
+## Starting the Development Server
+
+The ServITech Backend uses a convenient Composer script that starts all necessary services concurrently.
+
+### Quick Start
+
+```bash
+composer run dev
+```
+
+This single command starts:
+
+1. **Laravel Development Server** - PHP application server on `http://localhost:8000`
+2. **Queue Worker** - Processes background jobs from the database queue
+3. **Vite Dev Server** - Hot module replacement for frontend assets
+
+All three services run in parallel with color-coded output for easy debugging.
+
+<Note>
+  The development server runs on port **8000** by default. Access the API at `http://localhost:8000`.
+</Note>
+
+## Service Details
+
+### PHP Artisan Serve
+
+Runs the Laravel development server:
+
+```bash
+php artisan serve
+```
+
+**Default Configuration:**
+- Host: `127.0.0.1`
+- Port: `8000`
+- Workers: `4` (configured via `PHP_CLI_SERVER_WORKERS` in `.env`)
+
+**Custom Port:**
+```bash
+php artisan serve --port=8080
+```
+
+**Custom Host:**
+```bash
+php artisan serve --host=0.0.0.0 --port=8000
+```
+
+<Warning>
+  The `php artisan serve` command is for development only. **Never use it in production.**
+</Warning>
+
+### Queue Worker
+
+Processes background jobs such as sending emails or processing large tasks:
+
+```bash
+php artisan queue:listen --tries=1
+```
+
+**Configuration:**
+- Connection: `database` (jobs stored in the `jobs` table)
+- Max Tries: `1` - Jobs fail after one attempt
+- Timeout: Default Laravel timeout applies
+
+<Tip>
+  Queue jobs are visible in the `jobs` table when using database queue driver.
+</Tip>
+
+### Vite Development Server
+
+Compiles and hot-reloads frontend assets:
+
+```bash
+npm run dev
+```
+
+Vite watches for changes to JavaScript, CSS, and other frontend files and automatically rebuilds them.
+
+## Running Services Individually
+
+If you need to run services separately (for debugging or resource constraints):
+
+<Tabs>
+  <Tab title="Server Only">
+    ```bash
+    php artisan serve
+    ```
+    Access API at `http://localhost:8000`
+  </Tab>
+
+  <Tab title="Server + Queue">
+    ```bash Terminal 1
+    php artisan serve
+    ```
+
+    ```bash Terminal 2
+    php artisan queue:listen --tries=1
+    ```
+  </Tab>
+
+  <Tab title="All Services (Manual)">
+    ```bash Terminal 1 - Application Server
+    php artisan serve
+    ```
+
+    ```bash Terminal 2 - Queue Worker
+    php artisan queue:listen --tries=1
+    ```
+
+    ```bash Terminal 3 - Asset Compilation
+    npm run dev
+    ```
+  </Tab>
+</Tabs>
+
+## Accessing the Application
+
+Once the server is running, you can access:
+
+### API Endpoints
+
+```
+http://localhost:8000/api/
+```
+
+All API routes are prefixed with `/api` by convention.
+
+### API Documentation
+
+Interactive API documentation powered by Scramble:
+
+```
+http://localhost:8000/docs/api
+```
+
+<Note>
+  The documentation route is configured via `SCRAMBLE_API_ROUTE` in your `.env` file.
+</Note>
+
+The documentation includes:
+- All available endpoints organized by resource
+- Request/response examples
+- Authentication requirements
+- Validation rules
+
+### Key API Sections
+
+- **Authentication** - `/api/auth/*` - Login, register, password reset
+- **Users** - `/api/user/*` - User profile management
+- **Articles** - `/api/articles/*` - Technology and anime product management
+- **Categories** - `/api/categories/*` - Product category management
+- **Support Requests** - `/api/support/*` - Technical support ticket system
+- **Repair Requests** - `/api/repairs/*` - Device repair management (admin)
+
+## Seeding the Database
+
+For development and testing, seed the database with sample data:
+
+```bash
+php artisan db:seed
+```
+
+This runs all seeders defined in `DatabaseSeeder.php`:
+- **UserSeeder** - Creates test users with different roles
+- **CategorySeeder** - Adds product categories
+- **SubcategorySeeder** - Adds product subcategories
+- **ArticleSeeder** - Generates sample products
+
+<Tip>
+  Default test user credentials:
+  - **Email:** `example@example.com`
+  - **Password:** `password`
+</Tip>
+
+### Fresh Migration with Seed
+
+Reset the database and seed in one command:
+
+```bash
+php artisan migrate:fresh --seed
+```
+
+<Warning>
+  This command **drops all tables** and recreates them. Only use in development.
+</Warning>
+
+## Development Workflow
+
+A typical development workflow:
+
+<Steps>
+  <Step title="Start Services">
+    ```bash
+    composer run dev
+    ```
+  </Step>
+
+  <Step title="Make Code Changes">
+    Edit controllers, models, or routes in your IDE.
+  </Step>
+
+  <Step title="Test Changes">
+    - Use the API documentation at `/docs/api` to test endpoints
+    - Or use tools like Postman, Insomnia, or cURL
+  </Step>
+
+  <Step title="Check Logs">
+    Monitor application logs:
+    ```bash
+    tail -f storage/logs/laravel.log
+    ```
+  </Step>
+
+  <Step title="Run Tests">
+    Verify your changes don't break existing functionality:
+    ```bash
+    php artisan test
+    ```
+  </Step>
+</Steps>
+
+## Stopping the Server
+
+To stop all services started by `composer run dev`:
+
+1. Press `Ctrl+C` in the terminal
+2. This gracefully shuts down all three services
+
+If processes don't stop cleanly:
+
+<CodeGroup>
+  ```bash macOS/Linux
+  # Find and kill processes
+  lsof -ti:8000 | xargs kill -9
+  ```
+
+  ```powershell Windows
+  # Stop process on port 8000
+  netstat -ano | findstr :8000
+  taskkill /PID <PID> /F
+  ```
+</CodeGroup>
+
+## Troubleshooting
+
+### Port Already in Use
+
+**Error:** `Address already in use`
+
+**Solution:** Kill the existing process or use a different port:
+
+```bash
+# Kill process on port 8000 (Linux/macOS)
+lsof -ti:8000 | xargs kill -9
+
+# Or use a different port
+php artisan serve --port=8080
+```
+
+### Queue Jobs Not Processing
+
+**Issue:** Background jobs remain in `jobs` table
+
+**Solution:** Ensure the queue worker is running:
+
+```bash
+php artisan queue:listen
+```
+
+Check for failed jobs:
+
+```bash
+php artisan queue:failed
+```
+
+### Changes Not Reflecting
+
+**Issue:** Code changes don't appear in the browser
+
+**Solution:** Clear Laravel's cache:
+
+```bash
+php artisan cache:clear
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+```
+
+### Database Connection Failed
+
+**Error:** `SQLSTATE[HY000] [2002] Connection refused`
+
+**Solution for SQLite:**
+```bash
+# Ensure database file exists
+touch database/database.sqlite
+php artisan migrate
+```
+
+**Solution for MySQL:**
+```bash
+# Test MySQL connection
+mysql -u root -p -h 127.0.0.1
+
+# Verify .env database credentials
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=servitechdb
+DB_USERNAME=root
+DB_PASSWORD=your_password
+```
+
+### Storage Permission Denied
+
+**Error:** `The stream or file "storage/logs/laravel.log" could not be opened`
+
+**Solution (Linux/macOS):**
+```bash
+chmod -R 775 storage bootstrap/cache
+chown -R $USER:www-data storage bootstrap/cache
+```
+
+**Solution (Windows):**
+Run your terminal as Administrator.
+
+### JWT Secret Missing
+
+**Error:** `The JWT secret is not set`
+
+**Solution:**
+```bash
+php artisan jwt:secret
+```
+
+## Environment-Specific Configuration
+
+### Local Development
+
+```dotenv .env
+APP_ENV=local
+APP_DEBUG=true
+LOG_LEVEL=debug
+```
+
+### Performance Testing
+
+```dotenv .env
+APP_ENV=local
+APP_DEBUG=false
+LOG_LEVEL=warning
+```
+
+Disable debug mode to test performance without debug toolbar overhead.
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Database Migrations" icon="database" href="/guides/database-migrations">
+    Learn about managing database schema and seeders
+  </Card>
+  <Card title="Testing" icon="flask" href="/guides/testing">
+    Write and run tests for your API endpoints
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- [Laravel Artisan Console](https://laravel.com/docs/12.x/artisan)
+- [Laravel Queues](https://laravel.com/docs/12.x/queues)
+- [Vite Asset Bundling](https://laravel.com/docs/12.x/vite)

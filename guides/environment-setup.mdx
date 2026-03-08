@@ -1,0 +1,291 @@
+---
+title: Environment Setup
+description: Set up your development environment for ServITech Backend API
+---
+
+This guide walks you through setting up your local development environment to work with the ServITech Backend API.
+
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js & NPM** - Required for frontend asset compilation
+- **Git** - For version control
+- **A code editor** - VS Code, PHPStorm, or your preferred IDE
+- **MySQL** (optional) - If not using SQLite
+
+## Installing PHP and Composer
+
+The ServITech Backend requires **PHP 8.2 or higher** and **Composer** for dependency management.
+
+<Steps>
+  <Step title="Install PHP and Composer">
+    Choose the installation command for your operating system:
+
+    <CodeGroup>
+      ```bash macOS
+      /bin/bash -c "$(curl -fsSL https://php.new/install/mac/8.4)"
+      ```
+
+      ```powershell Windows
+      # Run as administrator
+      Set-ExecutionPolicy Bypass -Scope Process -Force; [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072; iex ((New-Object System.Net.WebClient).DownloadString('https://php.new/install/windows/8.4'))
+      ```
+
+      ```bash Linux
+      /bin/bash -c "$(curl -fsSL https://php.new/install/linux/8.4)"
+      ```
+    </CodeGroup>
+
+    <Note>
+      After installation completes, **restart your terminal** for changes to take effect.
+    </Note>
+  </Step>
+
+  <Step title="Verify Installation">
+    Confirm PHP and Composer are installed correctly:
+
+    ```bash
+    php --version
+    composer --version
+    ```
+
+    You should see PHP 8.2+ and Composer version information.
+  </Step>
+</Steps>
+
+## Cloning the Repository
+
+Clone the ServITech Backend repository and navigate to the project directory:
+
+```bash
+git clone https://github.com/MOSHE9647/ServITech-Backend.git
+cd ServITech-Backend
+```
+
+## Environment Configuration
+
+<Steps>
+  <Step title="Create Environment File">
+    Copy the example environment file:
+
+    ```bash
+    cp .env.example .env
+    ```
+
+    <Note>
+      On Windows without `cp`, manually create a `.env` file and copy the contents from `.env.example`.
+    </Note>
+  </Step>
+
+  <Step title="Generate Application Key">
+    Generate the Laravel application encryption key:
+
+    ```bash
+    php artisan key:generate
+    ```
+
+    This automatically updates the `APP_KEY` in your `.env` file.
+  </Step>
+
+  <Step title="Generate JWT Secret">
+    Generate the JWT authentication secret:
+
+    ```bash
+    php artisan jwt:secret
+    ```
+
+    This adds the `JWT_SECRET` to your `.env` file for token-based authentication.
+  </Step>
+</Steps>
+
+## Database Configuration
+
+The application supports both **SQLite** (default) and **MySQL**.
+
+<Tabs>
+  <Tab title="SQLite (Recommended for Development)">
+    SQLite is configured by default. No additional setup needed:
+
+    ```dotenv .env
+    DB_CONNECTION=sqlite
+    ```
+
+    The SQLite database file will be created automatically at `database/database.sqlite` when you run migrations.
+  </Tab>
+
+  <Tab title="MySQL">
+    To use MySQL, update your `.env` file:
+
+    ```dotenv .env
+    DB_CONNECTION=mysql
+    DB_HOST=127.0.0.1
+    DB_PORT=3306
+    DB_DATABASE=servitechdb
+    DB_USERNAME=root
+    DB_PASSWORD=your_password
+    ```
+
+    <Warning>
+      Ensure MySQL is running and the database exists before running migrations:
+      ```sql
+      CREATE DATABASE servitechdb CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+      ```
+    </Warning>
+  </Tab>
+</Tabs>
+
+## Key Environment Variables
+
+Here are the most important variables to configure in your `.env` file:
+
+### Application Settings
+
+```dotenv .env
+APP_NAME=ServITech
+APP_VERSION=1.0.0
+APP_ENV=local
+APP_DEBUG=true
+APP_URL=http://localhost:8000
+
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=es_ES
+```
+
+### Performance Settings
+
+```dotenv .env
+PHP_CLI_SERVER_WORKERS=4
+BCRYPT_ROUNDS=12
+```
+
+- `PHP_CLI_SERVER_WORKERS` - Number of worker processes for the development server
+- `BCRYPT_ROUNDS` - Password hashing cost (higher = more secure but slower)
+
+### Session Configuration
+
+```dotenv .env
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+```
+
+### Queue and Cache
+
+```dotenv .env
+QUEUE_CONNECTION=database
+CACHE_STORE=database
+```
+
+### Mail Configuration
+
+```dotenv .env
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="hello@example.com"
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+<Note>
+  In development, emails are logged to `storage/logs/laravel.log` by default. Configure SMTP settings for production.
+</Note>
+
+### API Documentation
+
+```dotenv .env
+SCRAMBLE_API_ROUTE=/docs/api
+```
+
+This configures the route where Scramble-generated API documentation will be available.
+
+## Installing Dependencies
+
+Install both PHP and Node.js dependencies:
+
+```bash
+composer install
+npm install
+```
+
+<Note>
+  If `composer install` fails, try running `composer update` to resolve dependency conflicts.
+</Note>
+
+## Troubleshooting
+
+### PHP Extension Missing
+
+**Error:** `extension not found`
+
+**Solution:** Install required PHP extensions:
+
+<CodeGroup>
+  ```bash Ubuntu/Debian
+  sudo apt-get install php8.2-xml php8.2-mbstring php8.2-curl php8.2-mysql php8.2-sqlite3
+  ```
+
+  ```bash macOS (Homebrew)
+  brew install php@8.2
+  ```
+
+  ```bash Windows
+  # Edit php.ini and uncomment required extensions:
+  extension=mbstring
+  extension=pdo_mysql
+  extension=pdo_sqlite
+  ```
+</CodeGroup>
+
+### Composer Memory Limit
+
+**Error:** `Allowed memory size exhausted`
+
+**Solution:** Increase PHP memory limit:
+
+```bash
+php -d memory_limit=-1 $(which composer) install
+```
+
+### Permission Issues (Linux/macOS)
+
+**Error:** `Permission denied` when writing to storage/logs
+
+**Solution:** Set proper permissions:
+
+```bash
+chmod -R 775 storage bootstrap/cache
+chown -R $USER:www-data storage bootstrap/cache
+```
+
+### Node.js Version Issues
+
+**Error:** `Unsupported Node.js version`
+
+**Solution:** Use a Node version manager (nvm):
+
+```bash
+# Install nvm (if not installed)
+curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+
+# Install and use LTS version
+nvm install --lts
+nvm use --lts
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Running Locally" icon="play" href="/guides/running-locally">
+    Start the development server and all required services
+  </Card>
+  <Card title="Database Migrations" icon="database" href="/guides/database-migrations">
+    Set up your database schema and seed test data
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- [Laravel Documentation](https://laravel.com/docs/12.x)
+- [PHP Official Documentation](https://www.php.net/docs.php)
+- [Composer Documentation](https://getcomposer.org/doc/)
+- [JWT Auth Package](https://jwt-auth.readthedocs.io/en/develop/)

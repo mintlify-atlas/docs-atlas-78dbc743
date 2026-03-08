@@ -1,0 +1,205 @@
+---
+title: Introduction
+description: REST API for managing tech and anime article quotations, support requests, and repair services
+---
+
+<div style={{
+  background: 'linear-gradient(135deg, #242b2c 0%, #0a0e1a 100%)',
+  borderRadius: '12px',
+  padding: '3rem 2rem',
+  marginBottom: '2rem',
+  border: '1px solid rgba(106, 90, 205, 0.3)',
+  boxShadow: '0 0 20px 5px rgba(106, 90, 205, 0.2)'
+}}>
+  <h1 style={{
+    fontSize: '48px',
+    fontWeight: '700',
+    color: '#ffffff',
+    marginBottom: '1rem',
+    lineHeight: '1.2'
+  }}>
+    ServITech Backend API
+  </h1>
+  <p style={{
+    fontSize: '20px',
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginBottom: '2rem',
+    maxWidth: '800px'
+  }}>
+    A powerful Laravel 12 REST API for managing tech and anime article quotations, support requests, and repair services. Built for the Mobile Platform Design and Programming course at Universidad Nacional de Costa Rica.
+  </p>
+</div>
+
+## What is ServITech?
+
+ServITech is a comprehensive backend API designed to power mobile and web applications for managing:
+
+- **Article Quotations** — Browse and manage tech and anime product catalogs
+- **Support Requests** — Track and manage customer support tickets
+- **Repair Services** — Handle repair request workflows (admin-only)
+- **User Management** — JWT-based authentication with role-based access control
+
+<CardGroup cols={2}>
+  <Card title="Quick Start" icon="rocket" href="/quickstart">
+    Get your development environment up and running in minutes
+  </Card>
+  <Card title="API Reference" icon="code" href="/api/overview">
+    Explore all available endpoints and their specifications
+  </Card>
+  <Card title="Authentication" icon="shield" href="/authentication/overview">
+    Learn how JWT authentication and authorization work
+  </Card>
+  <Card title="Development Guides" icon="book" href="/guides/environment-setup">
+    Best practices for development, testing, and deployment
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<CardGroup cols={2}>
+  <Card title="JWT Authentication" icon="key">
+    Secure token-based authentication with configurable expiration and refresh tokens
+  </Card>
+  <Card title="Role-Based Access" icon="users">
+    Two-tier permission system with User and Admin roles using Spatie Laravel Permission
+  </Card>
+  <Card title="Multi-Language Support" icon="globe">
+    Built-in localization for Spanish and English with automatic language detection
+  </Card>
+  <Card title="RESTful API" icon="webhook">
+    Clean, predictable endpoints following REST conventions with consistent response formats
+  </Card>
+  <Card title="Auto-Generated Docs" icon="file-lines">
+    Interactive API documentation powered by Scramble with live examples
+  </Card>
+  <Card title="Image Management" icon="image">
+    Upload and manage product images with automatic storage handling
+  </Card>
+</CardGroup>
+
+## Technology Stack
+
+ServITech is built with modern, production-ready technologies:
+
+- **Laravel 12** — Latest version of the PHP framework
+- **PHP 8.2+** — Modern PHP with type safety and performance improvements
+- **JWT Auth** — Token-based authentication using tymon/jwt-auth
+- **Spatie Permissions** — Powerful role and permission management
+- **Scramble** — Automatic API documentation generation
+- **MySQL/SQLite** — Flexible database support for development and production
+
+## Quick Example
+
+Here's a simple example of authenticating and fetching articles:
+
+<CodeGroup>
+
+```bash curl
+# Login to get JWT token
+curl -X POST https://api.example.com/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password"
+  }'
+
+# Use token to fetch articles
+curl -X GET https://api.example.com/articles \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -H "Accept-Language: en"
+```
+
+```javascript JavaScript
+// Login
+const loginResponse = await fetch('https://api.example.com/auth/login', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    email: 'user@example.com',
+    password: 'password'
+  })
+});
+
+const { token } = await loginResponse.json();
+
+// Fetch articles
+const articlesResponse = await fetch('https://api.example.com/articles', {
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Accept-Language': 'en'
+  }
+});
+
+const articles = await articlesResponse.json();
+```
+
+```python Python
+import requests
+
+# Login
+login_response = requests.post(
+    'https://api.example.com/auth/login',
+    json={
+        'email': 'user@example.com',
+        'password': 'password'
+    }
+)
+
+token = login_response.json()['token']
+
+# Fetch articles
+articles_response = requests.get(
+    'https://api.example.com/articles',
+    headers={
+        'Authorization': f'Bearer {token}',
+        'Accept-Language': 'en'
+    }
+)
+
+articles = articles_response.json()
+```
+
+</CodeGroup>
+
+## Next Steps
+
+<Steps>
+  <Step title="Install Dependencies">
+    Set up your local development environment with PHP, Composer, and MySQL
+    
+    [Installation Guide →](/installation)
+  </Step>
+  
+  <Step title="Run the API">
+    Start the development server and explore the auto-generated API documentation
+    
+    [Quick Start →](/quickstart)
+  </Step>
+  
+  <Step title="Explore Endpoints">
+    Learn about available endpoints, request/response formats, and authentication
+    
+    [API Reference →](/api/overview)
+  </Step>
+</Steps>
+
+## Project Context
+
+This project was developed as part of the **Diseño y Programación de Plataformas Móviles** (Mobile Platform Design and Programming) course at Universidad Nacional de Costa Rica during the first academic cycle of 2025.
+
+The backend serves a companion Android mobile application built with Kotlin. The frontend repository can be found at [ServITech-Frontend](https://github.com/MOSHE9647/ServITech-Frontend).
+
+<Note>
+  This is an educational project created for university coursework. It demonstrates best practices in API design, authentication, authorization, and Laravel development.
+</Note>
+
+## Getting Help
+
+<CardGroup cols={2}>
+  <Card title="GitHub Repository" icon="github" href="https://github.com/MOSHE9647/ServITech-Backend">
+    View source code, report issues, and contribute
+  </Card>
+  <Card title="API Documentation" icon="book-open" href="https://github.com/MOSHE9647/ServITech-Backend#-documentación-de-la-api">
+    Access the live Scramble documentation at `/docs/api`
+  </Card>
+</CardGroup>

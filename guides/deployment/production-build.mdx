@@ -1,0 +1,520 @@
+---
+title: Production Build
+description: Step-by-step guide to building ServITech Backend API for production deployment
+---
+
+# Production Build
+
+This guide walks you through the complete process of building ServITech Backend API for production deployment.
+
+## Prerequisites
+
+Before starting the production build:
+
+<Note>
+Ensure you have completed the [environment configuration](/guides/deployment/environment-variables) with production values.
+</Note>
+
+- Production server access with PHP 8.2+
+- Composer installed globally
+- Node.js and NPM installed
+- Production database configured and accessible
+- SSL certificate obtained (for HTTPS)
+
+## Step-by-Step Build Process
+
+### 1. Clone Repository
+
+Clone the ServITech Backend repository to your production server:
+
+```bash
+# Navigate to web root
+cd /var/www
+
+# Clone repository
+git clone https://github.com/MOSHE9647/ServITech-Backend.git servitechapi
+cd servitechapi
+
+# Checkout production branch
+git checkout main
+```
+
+### 2. Install Dependencies
+
+Install PHP and Node.js dependencies:
+
+```bash
+# Install Composer dependencies (production only)
+composer install --no-dev --optimize-autoloader
+
+# Install NPM dependencies
+npm install
+```
+
+<Info>
+The `--no-dev` flag excludes development dependencies, reducing the application footprint and improving security.
+</Info>
+
+### 3. Configure Environment
+
+Create and configure the production environment file:
+
+```bash
+# Copy environment template
+cp .env.example .env
+
+# Edit with production values
+nano .env
+```
+
+**Critical production settings:**
+
+```bash
+APP_NAME=ServITech
+APP_VERSION=1.0.0
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.your-domain.com
+
+# Database configuration
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=servitechdb
+DB_USERNAME=your_db_user
+DB_PASSWORD=your_secure_password
+```
+
+<Warning>
+**Never commit `.env` to version control.** Ensure `.env` is in `.gitignore`.
+</Warning>
+
+### 4. Generate Application Keys
+
+Generate required security keys:
+
+```bash
+# Generate Laravel application key
+php artisan key:generate
+
+# Generate JWT authentication secret
+php artisan jwt:secret
+```
+
+<Note>
+These commands automatically update your `.env` file with generated keys. Keep these keys secure and backed up.
+</Note>
+
+### 5. Set Up Database
+
+Prepare the production database:
+
+```bash
+# Run database migrations
+php artisan migrate --force
+
+# Optional: Seed initial data (if applicable)
+php artisan db:seed --class=ProductionSeeder
+```
+
+The `--force` flag is required to run migrations in production environment.
+
+<Warning>
+**Always backup your database before running migrations in production.**
+</Warning>
+
+### 6. Build Frontend Assets
+
+Compile and optimize frontend assets:
+
+```bash
+# Build production assets
+npm run build
+```
+
+This command:
+- Minifies JavaScript and CSS
+- Optimizes images
+- Generates versioned asset files
+- Outputs to `public/build` directory
+
+### 7. Optimize Application Performance
+
+Run Laravel optimization commands:
+
+```bash
+# Cache configuration files
+php artisan config:cache
+
+# Cache routes for faster routing
+php artisan route:cache
+
+# Cache Blade views
+php artisan view:cache
+
+# Optimize event discovery
+php artisan event:cache
+```
+
+<Info>
+**Cache Invalidation:** Run these commands after every deployment or configuration change.
+</Info>
+
+### 8. Set File Permissions
+
+Configure proper file permissions:
+
+```bash
+# Set owner (replace 'www-data' with your web server user)
+sudo chown -R www-data:www-data /var/www/servitechapi
+
+# Set directory permissions
+sudo find /var/www/servitechapi -type d -exec chmod 755 {} \;
+
+# Set file permissions
+sudo find /var/www/servitechapi -type f -exec chmod 644 {} \;
+
+# Storage and cache need write permissions
+sudo chmod -R 775 /var/www/servitechapi/storage
+sudo chmod -R 775 /var/www/servitechapi/bootstrap/cache
+```
+
+### 9. Configure Queue Workers
+
+Set up background job processing:
+
+**Create systemd service** at `/etc/systemd/system/servitechapi-worker.service`:
+
+```ini
+[Unit]
+Description=ServITech Queue Worker
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+Restart=always
+RestartSec=5
+ExecStart=/usr/bin/php /var/www/servitechapi/artisan queue:work database --tries=3 --timeout=90 --sleep=3
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+```
+
+**Enable and start the worker:**
+
+```bash
+# Reload systemd
+sudo systemctl daemon-reload
+
+# Enable service to start on boot
+sudo systemctl enable servitechapi-worker
+
+# Start the service
+sudo systemctl start servitechapi-worker
+
+# Check status
+sudo systemctl status servitechapi-worker
+```
+
+### 10. Configure Task Scheduling
+
+Laravel's task scheduler requires a single cron entry:
+
+```bash
+# Edit crontab
+sudo crontab -e -u www-data
+
+# Add this line:
+* * * * * cd /var/www/servitechapi && php artisan schedule:run >> /dev/null 2>&1
+```
+
+## Verification Steps
+
+After completing the build, verify the deployment:
+
+### 1. Test Application Access
+
+```bash
+curl https://api.your-domain.com/health
+```
+
+Expected response:
+```json
+{
+  "status": "healthy",
+  "timestamp": "2026-03-08T10:30:00.000000Z",
+  "version": "1.0.0"
+}
+```
+
+### 2. Check API Documentation
+
+Access the Scramble-generated API documentation:
+
+```
+https://api.your-domain.com/docs/api
+```
+
+### 3. Test Authentication
+
+Verify JWT authentication is working:
+
+```bash
+curl -X POST https://api.your-domain.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email":"user@example.com","password":"password"}'
+```
+
+### 4. Verify Queue Processing
+
+```bash
+# Check queue worker status
+sudo systemctl status servitechapi-worker
+
+# View queue worker logs
+sudo journalctl -u servitechapi-worker -f
+```
+
+### 5. Check Application Logs
+
+```bash
+# View recent logs
+tail -f /var/www/servitechapi/storage/logs/laravel.log
+```
+
+## Production Environment Script
+
+Create a deployment script for repeatable builds:
+
+```bash
+#!/bin/bash
+# deploy.sh - ServITech Production Deployment Script
+
+set -e
+
+APP_DIR="/var/www/servitechapi"
+
+echo "Starting deployment..."
+
+# Navigate to application directory
+cd $APP_DIR
+
+# Enable maintenance mode
+php artisan down --message="Deploying updates..." --retry=60
+
+# Pull latest changes
+echo "Pulling latest code..."
+git pull origin main
+
+# Install dependencies
+echo "Installing dependencies..."
+composer install --no-dev --optimize-autoloader --no-interaction
+npm ci
+
+# Build assets
+echo "Building assets..."
+npm run build
+
+# Run migrations
+echo "Running database migrations..."
+php artisan migrate --force
+
+# Clear and rebuild caches
+echo "Optimizing application..."
+php artisan config:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+php artisan event:cache
+
+# Restart queue workers
+echo "Restarting queue workers..."
+sudo systemctl restart servitechapi-worker
+
+# Disable maintenance mode
+php artisan up
+
+echo "Deployment completed successfully!"
+```
+
+Make the script executable:
+
+```bash
+chmod +x deploy.sh
+```
+
+## Performance Optimization
+
+### OPcache Configuration
+
+Enable OPcache for PHP performance:
+
+```ini
+; /etc/php/8.2/fpm/conf.d/10-opcache.ini
+opcache.enable=1
+opcache.memory_consumption=256
+opcache.interned_strings_buffer=16
+opcache.max_accelerated_files=10000
+opcache.revalidate_freq=2
+opcache.fast_shutdown=1
+```
+
+### Database Connection Pooling
+
+For high-traffic applications, consider using ProxySQL or PgBouncer for connection pooling.
+
+### Redis Caching
+
+Upgrade from database cache to Redis for better performance:
+
+```bash
+# Install Redis
+sudo apt install redis-server
+
+# Update .env
+CACHE_STORE=redis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+## Troubleshooting
+
+### Issue: 500 Internal Server Error
+
+**Solution:**
+```bash
+# Check application logs
+tail -f storage/logs/laravel.log
+
+# Check web server logs
+sudo tail -f /var/log/nginx/error.log
+
+# Verify file permissions
+sudo chmod -R 775 storage bootstrap/cache
+```
+
+### Issue: Database Connection Failed
+
+**Solution:**
+```bash
+# Test database connection
+php artisan tinker
+>>> DB::connection()->getPdo();
+
+# Verify credentials in .env
+# Check database server status
+sudo systemctl status mysql
+```
+
+### Issue: Assets Not Loading
+
+**Solution:**
+```bash
+# Rebuild assets
+npm run build
+
+# Clear application cache
+php artisan cache:clear
+
+# Verify public directory permissions
+ls -la public/
+```
+
+### Issue: Queue Jobs Not Processing
+
+**Solution:**
+```bash
+# Restart queue worker
+sudo systemctl restart servitechapi-worker
+
+# Check worker logs
+sudo journalctl -u servitechapi-worker -n 50
+
+# Verify queue configuration
+php artisan queue:work --once
+```
+
+## Rollback Procedure
+
+If deployment fails, quickly rollback:
+
+```bash
+# Enable maintenance mode
+php artisan down
+
+# Rollback to previous commit
+git reset --hard HEAD~1
+
+# Reinstall dependencies
+composer install --no-dev --optimize-autoloader
+npm ci && npm run build
+
+# Rollback database (if needed)
+php artisan migrate:rollback --force
+
+# Clear caches
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
+
+# Disable maintenance mode
+php artisan up
+```
+
+## Security Hardening
+
+### Additional Security Measures
+
+<Warning>
+Implement these security practices for production environments.
+</Warning>
+
+1. **Disable Directory Listing:**
+   ```nginx
+   autoindex off;
+   ```
+
+2. **Hide PHP Version:**
+   ```ini
+   ; /etc/php/8.2/fpm/php.ini
+   expose_php = Off
+   ```
+
+3. **Configure Security Headers:**
+   ```nginx
+   add_header X-Frame-Options "SAMEORIGIN" always;
+   add_header X-Content-Type-Options "nosniff" always;
+   add_header X-XSS-Protection "1; mode=block" always;
+   add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+   ```
+
+4. **Rate Limiting:**
+   Laravel includes built-in rate limiting. Configure in `app/Http/Kernel.php`.
+
+5. **CORS Configuration:**
+   Configure allowed origins in `config/cors.php`.
+
+## Continuous Integration/Deployment
+
+Consider implementing CI/CD pipelines using:
+
+- **GitHub Actions**: Automated testing and deployment
+- **GitLab CI/CD**: Integrated CI/CD solution
+- **Jenkins**: Self-hosted automation server
+- **Laravel Envoyer**: Zero-downtime deployment service
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Environment Variables" icon="gear" href="/guides/deployment/environment-variables">
+    Complete reference for all configuration options
+  </Card>
+  <Card title="Deployment Overview" icon="book" href="/guides/deployment/overview">
+    Learn about deployment strategies and best practices
+  </Card>
+</CardGroup>

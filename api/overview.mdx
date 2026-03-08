@@ -1,0 +1,205 @@
+---
+title: API Overview
+description: Introduction to the ServITech Backend API
+---
+
+## Introduction
+
+Welcome to the ServITech Backend API documentation. This RESTful API provides comprehensive functionality for managing IT service requests, knowledge base articles, and user management.
+
+The API is built with Laravel and uses JWT (JSON Web Tokens) for authentication, providing secure access to protected endpoints.
+
+## Base URL
+
+The API base URL depends on your environment:
+
+```
+Local Development: http://localhost:8000/api
+```
+
+For more details, see the [Base URL Configuration](/api/base-url) page.
+
+## Authentication
+
+Most endpoints require authentication using JWT tokens. To authenticate:
+
+1. Register a new account or login using the authentication endpoints
+2. Include the JWT token in subsequent requests using the `Authorization` header:
+
+```bash
+Authorization: Bearer YOUR_JWT_TOKEN
+```
+
+Tokens expire after a specified time period (default: 60 minutes). You'll receive the expiration time when you login.
+
+## Localization
+
+All API endpoints support multi-language responses. The API automatically adapts to the user's preferred language based on:
+
+- URL parameter
+- Cookie value
+- Session data
+- `Accept-Language` header
+
+### Supported Languages
+
+- **Spanish (es)** - Default language
+- **English (en)** - Fallback language
+
+### Example Request with Localization
+
+```bash
+curl -X GET "http://localhost:8000/api/articles" \
+  -H "Accept-Language: en"
+```
+
+## API Endpoints
+
+The API is organized into the following categories:
+
+<CardGroup cols={2}>
+  <Card title="Authentication" icon="key" href="#authentication-endpoints">
+    User registration, login, logout, and password reset
+  </Card>
+  <Card title="Articles" icon="newspaper" href="#article-endpoints">
+    Knowledge base articles management
+  </Card>
+  <Card title="Categories" icon="folder" href="#category-endpoints">
+    Article category management (Admin only)
+  </Card>
+  <Card title="Subcategories" icon="folder-tree" href="#subcategory-endpoints">
+    Article subcategory management
+  </Card>
+  <Card title="Support Requests" icon="headset" href="#support-request-endpoints">
+    User support request management (Authenticated)
+  </Card>
+  <Card title="Repair Requests" icon="wrench" href="#repair-request-endpoints">
+    Device repair request management (Admin only)
+  </Card>
+  <Card title="User Profile" icon="user" href="#user-endpoints">
+    User profile and password management
+  </Card>
+</CardGroup>
+
+### Authentication Endpoints
+
+All authentication endpoints are **public** (no authentication required).
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/auth/login` | Login with email and password |
+| `POST` | `/auth/register` | Register a new user account |
+| `POST` | `/auth/logout` | Logout the authenticated user |
+| `POST` | `/auth/reset-password` | Send password reset link |
+| `PUT` | `/auth/reset-password` | Reset password with token |
+
+### Article Endpoints
+
+Most article endpoints are **public**. Only create, update, and delete require **Admin authentication**.
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `GET` | `/articles` | Get all articles | No |
+| `POST` | `/articles` | Create a new article | Admin |
+| `GET` | `/articles/{category}` | Get articles by category | No |
+| `GET` | `/articles/id/{article}` | Get article by ID | No |
+| `PUT` | `/articles/{article}` | Update an article | Admin |
+| `DELETE` | `/articles/{article}` | Delete an article | Admin |
+
+### Category Endpoints
+
+All category endpoints require **Admin authentication**.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/category` | Get all categories |
+| `POST` | `/category` | Create a new category |
+| `GET` | `/category/{name}` | Get category by name |
+| `PUT` | `/category/{name}` | Update a category |
+| `DELETE` | `/category/{name}` | Delete a category |
+
+### Subcategory Endpoints
+
+Subcategory endpoints are **public** for read operations.
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `GET` | `/subcategories` | Get all subcategories | No |
+| `POST` | `/subcategories` | Create a subcategory | Yes |
+| `GET` | `/subcategories/{id}` | Get subcategory by ID | No |
+| `PUT` | `/subcategories/{id}` | Update a subcategory | Yes |
+| `DELETE` | `/subcategories/{id}` | Delete a subcategory | Yes |
+
+### Support Request Endpoints
+
+All support request endpoints require **authentication**.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/support-request` | Get all support requests |
+| `POST` | `/support-request` | Create a new support request |
+| `GET` | `/support-request/{id}` | Get support request by ID |
+| `PUT` | `/support-request/{id}` | Update a support request |
+| `DELETE` | `/support-request/{id}` | Delete a support request |
+
+### Repair Request Endpoints
+
+All repair request endpoints require **Admin authentication**.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/repair-request` | Get all repair requests |
+| `POST` | `/repair-request` | Create a new repair request |
+| `GET` | `/repair-request/{receipt_number}` | Get by receipt number |
+| `PUT` | `/repair-request/{receipt_number}` | Update a repair request |
+| `DELETE` | `/repair-request/{receipt_number}` | Delete a repair request |
+
+### User Endpoints
+
+All user endpoints require **authentication**.
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/user/profile` | Get current user profile |
+| `PUT` | `/user/profile` | Update user basic information |
+| `PUT` | `/user/password` | Update user password |
+
+## Response Format
+
+All API responses follow a consistent JSON structure. For detailed information about response formats, status codes, and error handling, see the [Response Format](/api/response-format) page.
+
+### Success Response Example
+
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "data": {
+    // Response data here
+  }
+}
+```
+
+### Error Response Example
+
+```json
+{
+  "status": 400,
+  "message": "Error message",
+  "errors": {
+    // Error details here
+  }
+}
+```
+
+## Rate Limiting
+
+Currently, there are no rate limits enforced on the API. However, please use the API responsibly.
+
+## Versioning
+
+The current API version is **v1.0.0**. The version may be updated in future releases with backward compatibility in mind.
+
+## Support
+
+For questions or issues with the API, please contact the development team or file an issue in the project repository.

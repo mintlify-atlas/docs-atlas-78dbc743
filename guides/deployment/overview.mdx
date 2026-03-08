@@ -1,0 +1,366 @@
+---
+title: Deployment Overview
+description: Overview of deployment options and strategies for ServITech Backend API
+---
+
+# Deployment Overview
+
+ServITech Backend API is a Laravel 12 application that can be deployed to various hosting environments. This guide provides an overview of deployment options and general considerations.
+
+## System Requirements
+
+Before deploying, ensure your production environment meets these requirements:
+
+- **PHP**: 8.2 or higher
+- **Composer**: Latest version
+- **Node.js & NPM**: For building frontend assets
+- **Database**: MySQL 5.7+ or SQLite 3
+- **Web Server**: Apache 2.4+ or Nginx 1.18+
+- **SSL Certificate**: Required for production environments
+
+<Note>
+ServITech uses Laravel 12, which requires PHP 8.2 or higher. Verify your server's PHP version before deployment.
+</Note>
+
+## Deployment Options
+
+### Traditional Server Deployment
+
+Deploy to a traditional VPS or dedicated server with full control over the environment:
+
+- **Pros**: Full control, customizable configuration, cost-effective for large applications
+- **Cons**: Requires server management knowledge, manual updates and maintenance
+- **Best for**: Production environments with specific requirements
+
+### Platform as a Service (PaaS)
+
+Deploy to managed platforms like Laravel Forge, Ploi, or DigitalOcean App Platform:
+
+- **Pros**: Automated deployments, easy scaling, minimal server management
+- **Cons**: Higher costs, less control over infrastructure
+- **Best for**: Teams without dedicated DevOps resources
+
+### Containerized Deployment
+
+Deploy using Docker containers for consistent environments:
+
+- **Pros**: Environment consistency, easy scaling, portable across platforms
+- **Cons**: Additional complexity, requires Docker knowledge
+- **Best for**: Microservices architecture or multi-environment setups
+
+## Pre-Deployment Checklist
+
+Before deploying to production, complete these essential tasks:
+
+### 1. Security Configuration
+
+<Warning>
+Never deploy with `APP_DEBUG=true` in production. This exposes sensitive application information.
+</Warning>
+
+```bash
+APP_ENV=production
+APP_DEBUG=false
+```
+
+### 2. Environment Variables
+
+Review and configure all environment variables for production:
+
+- Set strong `APP_KEY` (automatically generated)
+- Generate `JWT_SECRET` for authentication
+- Configure production database credentials
+- Set up email service credentials
+- Configure proper `APP_URL`
+
+See the [Environment Variables](/guides/deployment/environment-variables) guide for complete details.
+
+### 3. Database Setup
+
+Prepare your production database:
+
+```bash
+# Run migrations
+php artisan migrate --force
+
+# Optional: Seed initial data
+php artisan db:seed --class=ProductionSeeder
+```
+
+<Info>
+The `--force` flag is required to run migrations in production environments.
+</Info>
+
+### 4. Build Assets
+
+Compile frontend assets for production:
+
+```bash
+npm run build
+```
+
+This generates optimized assets in the `public/` directory.
+
+### 5. Optimize Performance
+
+Run Laravel optimization commands:
+
+```bash
+# Cache configuration
+php artisan config:cache
+
+# Cache routes
+php artisan route:cache
+
+# Cache views
+php artisan view:cache
+
+# Optimize autoloader
+composer install --optimize-autoloader --no-dev
+```
+
+## Web Server Configuration
+
+### Nginx Configuration
+
+```nginx
+server {
+    listen 80;
+    listen [::]:80;
+    server_name your-domain.com;
+    root /var/www/servitechapi/public;
+
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+
+    index index.php;
+
+    charset utf-8;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+
+    error_page 404 /index.php;
+
+    location ~ \.php$ {
+        fastcgi_pass unix:/var/run/php/php8.2-fpm.sock;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+}
+```
+
+### Apache Configuration
+
+Ensure `mod_rewrite` is enabled:
+
+```apache
+<VirtualHost *:80>
+    ServerName your-domain.com
+    DocumentRoot /var/www/servitechapi/public
+
+    <Directory /var/www/servitechapi/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ErrorLog ${APACHE_LOG_DIR}/servitechapi_error.log
+    CustomLog ${APACHE_LOG_DIR}/servitechapi_access.log combined
+</VirtualHost>
+```
+
+## File Permissions
+
+Set appropriate permissions for Laravel directories:
+
+```bash
+# Set ownership (replace 'www-data' with your web server user)
+chown -R www-data:www-data /var/www/servitechapi
+
+# Storage and cache directories need write permissions
+chmod -R 775 /var/www/servitechapi/storage
+chmod -R 775 /var/www/servitechapi/bootstrap/cache
+```
+
+## Queue Workers
+
+ServITech uses database queues for background jobs. Set up a queue worker service:
+
+### Systemd Service Configuration
+
+Create `/etc/systemd/system/servitechapi-worker.service`:
+
+```ini
+[Unit]
+Description=ServITech Queue Worker
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+Restart=always
+ExecStart=/usr/bin/php /var/www/servitechapi/artisan queue:work --tries=3 --timeout=90
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Enable and start the service:
+
+```bash
+sudo systemctl enable servitechapi-worker
+sudo systemctl start servitechapi-worker
+```
+
+## SSL/TLS Configuration
+
+<Warning>
+Always use HTTPS in production to protect sensitive data and authentication tokens.
+</Warning>
+
+### Using Let's Encrypt (Certbot)
+
+```bash
+# Install Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Obtain and install certificate
+sudo certbot --nginx -d your-domain.com
+
+# Auto-renewal is configured automatically
+```
+
+## Monitoring and Logging
+
+### Log Management
+
+Configure log rotation for Laravel logs:
+
+```bash
+# /etc/logrotate.d/servitechapi
+/var/www/servitechapi/storage/logs/*.log {
+    daily
+    rotate 14
+    compress
+    delaycompress
+    notifempty
+    create 0640 www-data www-data
+    sharedscripts
+}
+```
+
+### Application Monitoring
+
+Consider implementing:
+
+- **Error Tracking**: Sentry, Bugsnag, or Flare
+- **Performance Monitoring**: New Relic or Laravel Telescope
+- **Uptime Monitoring**: Uptime Robot or Pingdom
+- **Server Monitoring**: DataDog or Prometheus
+
+## Backup Strategy
+
+<Info>
+Implement automated backups for both database and application files.
+</Info>
+
+### Database Backups
+
+```bash
+# MySQL backup script
+mysqldump -u username -p database_name > backup_$(date +%Y%m%d).sql
+
+# Compress and store
+gzip backup_$(date +%Y%m%d).sql
+mv backup_$(date +%Y%m%d).sql.gz /backups/
+```
+
+### File Backups
+
+Backup critical directories:
+- `/storage/app` - Uploaded files and application data
+- `.env` - Environment configuration
+- `/database` - Database files (if using SQLite)
+
+## Deployment Workflow
+
+### Using Git for Deployments
+
+```bash
+# On production server
+cd /var/www/servitechapi
+
+# Pull latest changes
+git pull origin main
+
+# Install dependencies
+composer install --no-dev --optimize-autoloader
+npm install && npm run build
+
+# Run migrations
+php artisan migrate --force
+
+# Clear and rebuild caches
+php artisan config:clear
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
+
+# Restart queue workers
+sudo systemctl restart servitechapi-worker
+
+# Restart PHP-FPM (if needed)
+sudo systemctl restart php8.2-fpm
+```
+
+### Zero-Downtime Deployments
+
+For production environments with high availability requirements:
+
+1. Use Laravel Envoy or Deployer for automated deployments
+2. Implement blue-green deployment strategy
+3. Use load balancers to route traffic during updates
+4. Test in staging environment before production deployment
+
+## Health Checks
+
+Implement health check endpoints for monitoring:
+
+```php
+// routes/api.php
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'healthy',
+        'timestamp' => now()->toISOString(),
+        'version' => config('app.version'),
+    ]);
+});
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Production Build" icon="hammer" href="/guides/deployment/production-build">
+    Learn how to build and optimize your application for production
+  </Card>
+  <Card title="Environment Variables" icon="gear" href="/guides/deployment/environment-variables">
+    Complete reference for all environment variables
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- [Laravel Deployment Documentation](https://laravel.com/docs/12.x/deployment)
+- [Laravel Forge](https://forge.laravel.com/) - Managed Laravel hosting
+- [Envoyer](https://envoyer.io/) - Zero-downtime deployment service
+- [Deployer](https://deployer.org/) - PHP deployment tool

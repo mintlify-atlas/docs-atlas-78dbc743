@@ -1,0 +1,1019 @@
+---
+title: Environment Variables
+description: Complete reference for all environment variables in ServITech Backend API
+---
+
+# Environment Variables
+
+ServITech Backend API uses environment variables to configure application behavior. This guide provides a comprehensive reference for all available variables.
+
+<Note>
+All environment variables are defined in the `.env` file in the application root. Never commit this file to version control.
+</Note>
+
+## Application Configuration
+
+### APP_NAME
+
+**Type:** String  
+**Default:** `ServITech`  
+**Description:** The name of your application. Used in notifications, emails, and UI elements.
+
+```bash
+APP_NAME=ServITech
+```
+
+### APP_VERSION
+
+**Type:** String  
+**Default:** `1.0.0`  
+**Description:** Current version of the application. Used for tracking and display purposes.
+
+```bash
+APP_VERSION=1.0.0
+```
+
+### APP_ENV
+
+**Type:** String  
+**Default:** `production`  
+**Options:** `local`, `development`, `staging`, `production`  
+**Description:** Defines the application environment.
+
+```bash
+# Development
+APP_ENV=local
+
+# Production
+APP_ENV=production
+```
+
+<Warning>
+Always set `APP_ENV=production` in production environments for optimal security and performance.
+</Warning>
+
+### APP_KEY
+
+**Type:** String (Base64)  
+**Required:** Yes  
+**Description:** Encryption key used for securing session data, cookies, and encrypted values.
+
+```bash
+APP_KEY=base64:your-generated-key-here
+```
+
+**Generate using:**
+```bash
+php artisan key:generate
+```
+
+<Warning>
+**Critical:** Never share or expose `APP_KEY`. If compromised, regenerate immediately and re-encrypt all encrypted data.
+</Warning>
+
+### APP_DEBUG
+
+**Type:** Boolean  
+**Default:** `false`  
+**Description:** Enables detailed error messages and stack traces.
+
+```bash
+# Development
+APP_DEBUG=true
+
+# Production (REQUIRED)
+APP_DEBUG=false
+```
+
+<Warning>
+**Security Risk:** Never enable `APP_DEBUG=true` in production. It exposes sensitive information like environment variables, database queries, and application structure.
+</Warning>
+
+### APP_URL
+
+**Type:** URL  
+**Default:** `http://localhost:8000`  
+**Description:** The base URL of your application. Used for generating links, emails, and API responses.
+
+```bash
+# Development
+APP_URL=http://localhost:8000
+
+# Production
+APP_URL=https://api.your-domain.com
+```
+
+<Info>
+Always use HTTPS in production environments for security.
+</Info>
+
+## Localization
+
+### APP_LOCALE
+
+**Type:** String  
+**Default:** `es`  
+**Description:** Default application language.
+
+```bash
+APP_LOCALE=es
+```
+
+### APP_FALLBACK_LOCALE
+
+**Type:** String  
+**Default:** `en`  
+**Description:** Fallback language when translations are missing in the primary locale.
+
+```bash
+APP_FALLBACK_LOCALE=en
+```
+
+### APP_FAKER_LOCALE
+
+**Type:** String  
+**Default:** `es_ES`  
+**Description:** Locale for Faker library when generating test data.
+
+```bash
+APP_FAKER_LOCALE=es_ES
+```
+
+## Maintenance Mode
+
+### APP_MAINTENANCE_DRIVER
+
+**Type:** String  
+**Default:** `file`  
+**Options:** `file`, `cache`  
+**Description:** Storage driver for maintenance mode state.
+
+```bash
+APP_MAINTENANCE_DRIVER=file
+```
+
+### APP_MAINTENANCE_STORE
+
+**Type:** String  
+**Default:** `database`  
+**Description:** Cache store to use when driver is set to `cache`.
+
+```bash
+APP_MAINTENANCE_STORE=database
+```
+
+### APP_PREVIOUS_KEYS
+
+**Type:** Comma-separated strings  
+**Description:** Previous application keys for key rotation.
+
+```bash
+APP_PREVIOUS_KEYS=base64:old-key-1,base64:old-key-2
+```
+
+## Server Configuration
+
+### PHP_CLI_SERVER_WORKERS
+
+**Type:** Integer  
+**Default:** `4`  
+**Description:** Number of worker processes for PHP's built-in development server.
+
+```bash
+PHP_CLI_SERVER_WORKERS=4
+```
+
+<Info>
+This setting only affects the development server (`php artisan serve`). Production servers should use PHP-FPM or similar.
+</Info>
+
+## Security
+
+### BCRYPT_ROUNDS
+
+**Type:** Integer  
+**Default:** `12`  
+**Range:** `4` - `31`  
+**Description:** Cost factor for bcrypt password hashing. Higher values increase security but require more CPU.
+
+```bash
+BCRYPT_ROUNDS=12
+```
+
+<Note>
+Increasing rounds above 12 may impact login performance. Benchmark before changing in production.
+</Note>
+
+## Logging
+
+### LOG_CHANNEL
+
+**Type:** String  
+**Default:** `stack`  
+**Options:** `stack`, `single`, `daily`, `slack`, `syslog`, `errorlog`  
+**Description:** Primary logging channel.
+
+```bash
+LOG_CHANNEL=stack
+```
+
+### LOG_STACK
+
+**Type:** String  
+**Default:** `single`  
+**Description:** Channel to use within the stack logging channel.
+
+```bash
+LOG_STACK=single
+```
+
+### LOG_DEPRECATIONS_CHANNEL
+
+**Type:** String  
+**Default:** `null`  
+**Description:** Separate channel for PHP and Laravel deprecation warnings.
+
+```bash
+LOG_DEPRECATIONS_CHANNEL=null
+```
+
+### LOG_LEVEL
+
+**Type:** String  
+**Default:** `debug`  
+**Options:** `debug`, `info`, `notice`, `warning`, `error`, `critical`, `alert`, `emergency`  
+**Description:** Minimum log level to record.
+
+```bash
+# Development
+LOG_LEVEL=debug
+
+# Production
+LOG_LEVEL=error
+```
+
+## Database Configuration
+
+### DB_CONNECTION
+
+**Type:** String  
+**Default:** `sqlite`  
+**Options:** `sqlite`, `mysql`, `mariadb`, `pgsql`, `sqlsrv`  
+**Description:** Database driver to use.
+
+```bash
+# Development (SQLite)
+DB_CONNECTION=sqlite
+
+# Production (MySQL)
+DB_CONNECTION=mysql
+```
+
+### MySQL/MariaDB Configuration
+
+For production deployments, use MySQL or MariaDB:
+
+#### DB_HOST
+
+**Type:** String  
+**Default:** `127.0.0.1`  
+**Description:** Database server hostname or IP address.
+
+```bash
+DB_HOST=127.0.0.1
+```
+
+#### DB_PORT
+
+**Type:** Integer  
+**Default:** `3306`  
+**Description:** Database server port.
+
+```bash
+DB_PORT=3306
+```
+
+#### DB_DATABASE
+
+**Type:** String  
+**Default:** `laravel`  
+**Description:** Database name.
+
+```bash
+DB_DATABASE=servitechdb
+```
+
+#### DB_USERNAME
+
+**Type:** String  
+**Default:** `root`  
+**Description:** Database user.
+
+```bash
+DB_USERNAME=servitechuser
+```
+
+<Warning>
+**Never use the root user in production.** Create a dedicated database user with minimal required privileges.
+</Warning>
+
+#### DB_PASSWORD
+
+**Type:** String  
+**Description:** Database password.
+
+```bash
+DB_PASSWORD=your-secure-password-here
+```
+
+<Warning>
+Use strong, randomly generated passwords for production databases.
+</Warning>
+
+### Complete MySQL Example
+
+```bash
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=servitechdb
+DB_USERNAME=servitechuser
+DB_PASSWORD=StrongP@ssw0rd123!
+```
+
+## Session Configuration
+
+### SESSION_DRIVER
+
+**Type:** String  
+**Default:** `database`  
+**Options:** `file`, `cookie`, `database`, `memcached`, `redis`, `array`  
+**Description:** Session storage driver.
+
+```bash
+SESSION_DRIVER=database
+```
+
+<Info>
+For API-only applications using JWT, session driver has minimal impact. Database or Redis recommended for multi-server setups.
+</Info>
+
+### SESSION_LIFETIME
+
+**Type:** Integer (minutes)  
+**Default:** `120`  
+**Description:** Session lifetime in minutes.
+
+```bash
+SESSION_LIFETIME=120
+```
+
+### SESSION_ENCRYPT
+
+**Type:** Boolean  
+**Default:** `false`  
+**Description:** Encrypt session data.
+
+```bash
+SESSION_ENCRYPT=false
+```
+
+### SESSION_PATH
+
+**Type:** String  
+**Default:** `/`  
+**Description:** Session cookie path.
+
+```bash
+SESSION_PATH=/
+```
+
+### SESSION_DOMAIN
+
+**Type:** String  
+**Default:** `null`  
+**Description:** Session cookie domain.
+
+```bash
+SESSION_DOMAIN=.your-domain.com
+```
+
+## Cache Configuration
+
+### CACHE_STORE
+
+**Type:** String  
+**Default:** `database`  
+**Options:** `file`, `database`, `redis`, `memcached`, `dynamodb`, `array`  
+**Description:** Cache driver.
+
+```bash
+# Development
+CACHE_STORE=database
+
+# Production (recommended)
+CACHE_STORE=redis
+```
+
+### CACHE_PREFIX
+
+**Type:** String  
+**Description:** Prefix for cache keys (optional).
+
+```bash
+CACHE_PREFIX=servitechapi_
+```
+
+## Queue Configuration
+
+### QUEUE_CONNECTION
+
+**Type:** String  
+**Default:** `database`  
+**Options:** `sync`, `database`, `redis`, `sqs`, `beanstalkd`  
+**Description:** Queue driver for background jobs.
+
+```bash
+# Development (synchronous)
+QUEUE_CONNECTION=sync
+
+# Production (asynchronous)
+QUEUE_CONNECTION=database
+```
+
+<Note>
+ServITech uses `database` queue driver. Ensure queue workers are running in production.
+</Note>
+
+## Filesystem Configuration
+
+### FILESYSTEM_DISK
+
+**Type:** String  
+**Default:** `local`  
+**Options:** `local`, `public`, `s3`, `ftp`, `sftp`  
+**Description:** Default filesystem disk.
+
+```bash
+FILESYSTEM_DISK=local
+```
+
+## Broadcast Configuration
+
+### BROADCAST_CONNECTION
+
+**Type:** String  
+**Default:** `log`  
+**Options:** `log`, `pusher`, `ably`, `redis`  
+**Description:** Broadcasting driver for real-time events.
+
+```bash
+BROADCAST_CONNECTION=log
+```
+
+## Redis Configuration
+
+### REDIS_CLIENT
+
+**Type:** String  
+**Default:** `phpredis`  
+**Options:** `phpredis`, `predis`  
+**Description:** Redis client library.
+
+```bash
+REDIS_CLIENT=phpredis
+```
+
+### REDIS_HOST
+
+**Type:** String  
+**Default:** `127.0.0.1`  
+**Description:** Redis server hostname.
+
+```bash
+REDIS_HOST=127.0.0.1
+```
+
+### REDIS_PASSWORD
+
+**Type:** String  
+**Default:** `null`  
+**Description:** Redis authentication password.
+
+```bash
+REDIS_PASSWORD=your-redis-password
+```
+
+### REDIS_PORT
+
+**Type:** Integer  
+**Default:** `6379`  
+**Description:** Redis server port.
+
+```bash
+REDIS_PORT=6379
+```
+
+## Memcached Configuration
+
+### MEMCACHED_HOST
+
+**Type:** String  
+**Default:** `127.0.0.1`  
+**Description:** Memcached server hostname.
+
+```bash
+MEMCACHED_HOST=127.0.0.1
+```
+
+## Mail Configuration
+
+### MAIL_MAILER
+
+**Type:** String  
+**Default:** `log`  
+**Options:** `smtp`, `sendmail`, `mailgun`, `ses`, `postmark`, `log`  
+**Description:** Mail driver.
+
+```bash
+# Development (logs emails)
+MAIL_MAILER=log
+
+# Production (SMTP example)
+MAIL_MAILER=smtp
+```
+
+### MAIL_SCHEME
+
+**Type:** String  
+**Default:** `null`  
+**Options:** `null`, `tls`, `ssl`  
+**Description:** Mail transport encryption scheme.
+
+```bash
+MAIL_SCHEME=tls
+```
+
+### MAIL_HOST
+
+**Type:** String  
+**Default:** `127.0.0.1`  
+**Description:** SMTP server hostname.
+
+```bash
+MAIL_HOST=smtp.gmail.com
+```
+
+### MAIL_PORT
+
+**Type:** Integer  
+**Default:** `2525`  
+**Description:** SMTP server port.
+
+```bash
+# TLS
+MAIL_PORT=587
+
+# SSL
+MAIL_PORT=465
+```
+
+### MAIL_USERNAME
+
+**Type:** String  
+**Description:** SMTP authentication username.
+
+```bash
+MAIL_USERNAME=your-email@gmail.com
+```
+
+### MAIL_PASSWORD
+
+**Type:** String  
+**Description:** SMTP authentication password.
+
+```bash
+MAIL_PASSWORD=your-app-password
+```
+
+<Warning>
+For Gmail, use App Passwords instead of account passwords. Never commit mail credentials.
+</Warning>
+
+### MAIL_FROM_ADDRESS
+
+**Type:** Email  
+**Default:** `hello@example.com`  
+**Description:** Default sender email address.
+
+```bash
+MAIL_FROM_ADDRESS=noreply@your-domain.com
+```
+
+### MAIL_FROM_NAME
+
+**Type:** String  
+**Default:** `${APP_NAME}`  
+**Description:** Default sender name.
+
+```bash
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+### Complete SMTP Example (Gmail)
+
+```bash
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_ENCRYPTION=tls
+MAIL_FROM_ADDRESS=noreply@your-domain.com
+MAIL_FROM_NAME="${APP_NAME}"
+```
+
+## JWT Authentication
+
+ServITech uses JWT (JSON Web Tokens) for API authentication.
+
+### JWT_SECRET
+
+**Type:** String (Base64)  
+**Required:** Yes  
+**Description:** Secret key for signing JWT tokens.
+
+```bash
+JWT_SECRET=base64:your-jwt-secret-here
+```
+
+**Generate using:**
+```bash
+php artisan jwt:secret
+```
+
+<Warning>
+**Critical:** Keep `JWT_SECRET` secure. If compromised, all issued tokens become invalid and must be regenerated.
+</Warning>
+
+### JWT_TTL
+
+**Type:** Integer (minutes)  
+**Default:** `60`  
+**Description:** JWT token time-to-live.
+
+```bash
+# 1 hour
+JWT_TTL=60
+
+# 24 hours
+JWT_TTL=1440
+```
+
+### JWT_REFRESH_TTL
+
+**Type:** Integer (minutes)  
+**Default:** `20160` (2 weeks)  
+**Description:** Refresh token time-to-live.
+
+```bash
+JWT_REFRESH_TTL=20160
+```
+
+### JWT_ALGO
+
+**Type:** String  
+**Default:** `HS256`  
+**Options:** `HS256`, `HS384`, `HS512`, `RS256`, `RS384`, `RS512`  
+**Description:** JWT signing algorithm.
+
+```bash
+JWT_ALGO=HS256
+```
+
+### JWT_BLACKLIST_ENABLED
+
+**Type:** Boolean  
+**Default:** `true`  
+**Description:** Enable token blacklisting for logout.
+
+```bash
+JWT_BLACKLIST_ENABLED=true
+```
+
+### JWT_BLACKLIST_GRACE_PERIOD
+
+**Type:** Integer (seconds)  
+**Default:** `0`  
+**Description:** Grace period for concurrent requests with same token.
+
+```bash
+JWT_BLACKLIST_GRACE_PERIOD=5
+```
+
+## API Documentation (Scramble)
+
+### SCRAMBLE_API_ROUTE
+
+**Type:** String (URL path)  
+**Default:** `/docs/api`  
+**Description:** Route path for accessing API documentation.
+
+```bash
+SCRAMBLE_API_ROUTE=/docs/api
+```
+
+**Access documentation at:**
+```
+https://your-domain.com/docs/api
+```
+
+## AWS Configuration
+
+For AWS services (S3, SES, etc.):
+
+### AWS_ACCESS_KEY_ID
+
+**Type:** String  
+**Description:** AWS access key ID.
+
+```bash
+AWS_ACCESS_KEY_ID=your-access-key-id
+```
+
+### AWS_SECRET_ACCESS_KEY
+
+**Type:** String  
+**Description:** AWS secret access key.
+
+```bash
+AWS_SECRET_ACCESS_KEY=your-secret-access-key
+```
+
+### AWS_DEFAULT_REGION
+
+**Type:** String  
+**Default:** `us-east-1`  
+**Description:** Default AWS region.
+
+```bash
+AWS_DEFAULT_REGION=us-east-1
+```
+
+### AWS_BUCKET
+
+**Type:** String  
+**Description:** S3 bucket name for file storage.
+
+```bash
+AWS_BUCKET=your-bucket-name
+```
+
+### AWS_USE_PATH_STYLE_ENDPOINT
+
+**Type:** Boolean  
+**Default:** `false`  
+**Description:** Use path-style S3 endpoints (for S3-compatible services).
+
+```bash
+AWS_USE_PATH_STYLE_ENDPOINT=false
+```
+
+## Vite Configuration
+
+### VITE_APP_NAME
+
+**Type:** String  
+**Default:** `${APP_NAME}`  
+**Description:** Application name exposed to Vite for frontend builds.
+
+```bash
+VITE_APP_NAME="${APP_NAME}"
+```
+
+## Production Environment Template
+
+Complete production `.env` template:
+
+```bash
+# Application
+APP_NAME=ServITech
+APP_VERSION=1.0.0
+APP_ENV=production
+APP_KEY=base64:generated-key
+APP_DEBUG=false
+APP_URL=https://api.your-domain.com
+
+# Localization
+APP_LOCALE=es
+APP_FALLBACK_LOCALE=en
+APP_FAKER_LOCALE=es_ES
+
+# Maintenance
+APP_MAINTENANCE_DRIVER=file
+APP_MAINTENANCE_STORE=database
+APP_PREVIOUS_KEYS=
+
+# Server
+PHP_CLI_SERVER_WORKERS=4
+
+# Security
+BCRYPT_ROUNDS=12
+
+# Logging
+LOG_CHANNEL=stack
+LOG_STACK=single
+LOG_DEPRECATIONS_CHANNEL=null
+LOG_LEVEL=error
+
+# Database
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=servitechdb
+DB_USERNAME=servitechuser
+DB_PASSWORD=secure-password
+
+# Session
+SESSION_DRIVER=database
+SESSION_LIFETIME=120
+SESSION_ENCRYPT=false
+SESSION_PATH=/
+SESSION_DOMAIN=null
+
+# Cache
+CACHE_STORE=redis
+CACHE_PREFIX=servitechapi_
+
+# Queue
+QUEUE_CONNECTION=database
+
+# Filesystem
+FILESYSTEM_DISK=local
+
+# Broadcasting
+BROADCAST_CONNECTION=log
+
+# Redis
+REDIS_CLIENT=phpredis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+
+# Memcached
+MEMCACHED_HOST=127.0.0.1
+
+# Mail
+MAIL_MAILER=smtp
+MAIL_SCHEME=tls
+MAIL_HOST=smtp.gmail.com
+MAIL_PORT=587
+MAIL_USERNAME=your-email@gmail.com
+MAIL_PASSWORD=your-app-password
+MAIL_FROM_ADDRESS=noreply@your-domain.com
+MAIL_FROM_NAME="${APP_NAME}"
+
+# JWT Authentication
+JWT_SECRET=base64:generated-jwt-secret
+JWT_TTL=60
+JWT_REFRESH_TTL=20160
+JWT_ALGO=HS256
+JWT_BLACKLIST_ENABLED=true
+JWT_BLACKLIST_GRACE_PERIOD=0
+
+# API Documentation
+SCRAMBLE_API_ROUTE=/docs/api
+
+# AWS (if using)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_DEFAULT_REGION=us-east-1
+AWS_BUCKET=
+AWS_USE_PATH_STYLE_ENDPOINT=false
+
+# Vite
+VITE_APP_NAME="${APP_NAME}"
+```
+
+## Security Best Practices
+
+<Warning>
+Follow these security practices when configuring environment variables:
+</Warning>
+
+1. **Never commit `.env` to version control**
+   - Ensure `.env` is in `.gitignore`
+   - Use `.env.example` as a template
+
+2. **Use strong, random passwords**
+   - Database passwords: 16+ characters
+   - JWT secrets: Generated by Laravel
+   - Use a password manager
+
+3. **Restrict file permissions**
+   ```bash
+   chmod 600 .env
+   ```
+
+4. **Set production values**
+   - `APP_ENV=production`
+   - `APP_DEBUG=false`
+   - `LOG_LEVEL=error`
+
+5. **Use HTTPS in production**
+   - Set `APP_URL` with `https://`
+   - Configure SSL certificates
+
+6. **Rotate secrets regularly**
+   - Update `JWT_SECRET` periodically
+   - Rotate database credentials
+   - Use key rotation for `APP_KEY`
+
+7. **Limit database user privileges**
+   ```sql
+   GRANT SELECT, INSERT, UPDATE, DELETE ON servitechdb.* TO 'servitechuser'@'localhost';
+   ```
+
+8. **Use environment-specific configurations**
+   - Separate `.env` files for staging and production
+   - Never copy production `.env` to development
+
+## Environment Variable Management
+
+### Using Laravel Forge
+
+```bash
+# Edit environment via Forge dashboard
+# Forge automatically manages .env securely
+```
+
+### Using Envoyer
+
+```bash
+# Configure environment variables in Envoyer
+# Automatically deployed with each release
+```
+
+### Using Docker
+
+```dockerfile
+# docker-compose.yml
+services:
+  app:
+    environment:
+      - APP_ENV=production
+      - APP_DEBUG=false
+    env_file:
+      - .env.production
+```
+
+### Using Secret Management Services
+
+For enterprise deployments:
+
+- **AWS Secrets Manager**
+- **HashiCorp Vault**
+- **Azure Key Vault**
+- **Google Cloud Secret Manager**
+
+## Validation Script
+
+Create a script to validate environment configuration:
+
+```bash
+#!/bin/bash
+# validate-env.sh
+
+REQUIRED_VARS=(
+    "APP_KEY"
+    "APP_URL"
+    "DB_CONNECTION"
+    "DB_DATABASE"
+    "JWT_SECRET"
+)
+
+for var in "${REQUIRED_VARS[@]}"; do
+    if [ -z "${!var}" ]; then
+        echo "Error: $var is not set"
+        exit 1
+    fi
+done
+
+if [ "$APP_ENV" = "production" ] && [ "$APP_DEBUG" = "true" ]; then
+    echo "Error: APP_DEBUG must be false in production"
+    exit 1
+fi
+
+echo "Environment validation passed!"
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Deployment Overview" icon="book" href="/guides/deployment/overview">
+    Learn about deployment strategies
+  </Card>
+  <Card title="Production Build" icon="hammer" href="/guides/deployment/production-build">
+    Build your application for production
+  </Card>
+</CardGroup>

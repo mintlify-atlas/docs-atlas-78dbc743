@@ -1,0 +1,678 @@
+---
+title: Testing
+description: Running tests and writing new tests for ServITech Backend API
+---
+
+This guide covers the testing framework, how to run existing tests, and how to write new tests for the ServITech Backend API.
+
+## Testing Overview
+
+ServITech uses **PHPUnit** for testing, integrated with Laravel's testing framework. Tests ensure the API behaves correctly and prevent regressions when adding new features.
+
+### Test Types
+
+The project includes:
+
+- **Feature Tests** - Test complete user workflows and API endpoints
+- **Unit Tests** - Test individual methods and classes (can be added as needed)
+
+<Note>
+  Currently, the project focuses on **Feature Tests** that validate API behavior end-to-end.
+</Note>
+
+## Test Structure
+
+Tests are located in the `tests/` directory:
+
+```
+tests/
+├── Feature/
+│   ├── Auth/
+│   │   ├── LoginTest.php
+│   │   ├── LogoutTest.php
+│   │   ├── UserRegisterTest.php
+│   │   └── ResetPasswordTest.php
+│   ├── User/
+│   │   ├── UserProfileTest.php
+│   │   ├── UpdateUserDataTest.php
+│   │   └── UpdatePasswordTest.php
+│   ├── Article/
+│   │   ├── ArticleCreateTest.php
+│   │   ├── ArticleIndexTest.php
+│   │   ├── ArticleShowByIdTest.php
+│   │   ├── ArticleUpdateTest.php
+│   │   └── ArticleDeleteTest.php
+│   ├── Category/
+│   │   ├── CategoryStoreTest.php
+│   │   ├── CategoryIndexTest.php
+│   │   └── CategoryDestroyTest.php
+│   ├── SupportRequest/
+│   │   ├── SupportRequestCreateTest.php
+│   │   └── ...
+│   └── RepairRequest/
+│       ├── RepairRequestCreateTest.php
+│       └── ...
+└── TestCase.php
+```
+
+## Running Tests
+
+### Run All Tests
+
+Execute the full test suite:
+
+```bash
+php artisan test
+```
+
+Or using the Composer script (includes config cache clearing):
+
+```bash
+composer run test
+```
+
+<Tip>
+  The `composer test` script runs `php artisan config:clear` before tests to ensure clean configuration.
+</Tip>
+
+### Run Specific Test File
+
+Test a single file:
+
+```bash
+php artisan test tests/Feature/Auth/LoginTest.php
+```
+
+### Run Specific Test Method
+
+Run a single test method by name:
+
+```bash
+php artisan test --filter test_an_existing_user_can_login
+```
+
+### Run Tests by Group
+
+Run tests in a specific directory:
+
+```bash
+php artisan test tests/Feature/Auth/
+```
+
+### Parallel Testing
+
+Run tests in parallel for faster execution:
+
+```bash
+php artisan test --parallel
+```
+
+## Test Configuration
+
+The test environment is configured in `phpunit.xml`:
+
+```xml phpunit.xml
+<phpunit>
+    <testsuites>
+        <testsuite name="Feature">
+            <directory>./tests/Feature</directory>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="APP_ENV" value="testing"/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="CACHE_STORE" value="array"/>
+        <env name="DB_CONNECTION" value="sqlite"/>
+        <env name="DB_DATABASE" value=":memory:"/>
+        <env name="MAIL_MAILER" value="array"/>
+        <env name="QUEUE_CONNECTION" value="sync"/>
+        <env name="SESSION_DRIVER" value="array"/>
+    </php>
+</phpunit>
+```
+
+### Key Testing Settings
+
+- **Database:** Uses in-memory SQLite (`:memory:`) for speed and isolation
+- **Cache:** Array driver (no persistent cache)
+- **Mail:** Array driver (emails captured in memory, not sent)
+- **Queue:** Sync driver (jobs run immediately)
+- **Sessions:** Array driver (no persistent sessions)
+- **BCRYPT_ROUNDS:** Reduced to 4 for faster password hashing
+
+<Note>
+  Tests run in complete isolation. Each test gets a fresh database and won't affect your development data.
+</Note>
+
+## Test Environment Setup
+
+Tests automatically:
+
+1. Use in-memory SQLite database
+2. Run migrations before each test
+3. Seed the database with test data
+4. Roll back changes after each test
+
+This is handled by Laravel's `RefreshDatabase` trait used in most tests.
+
+## Writing Tests
+
+### Basic Test Structure
+
+Here's the structure of a typical feature test:
+
+```php tests/Feature/Auth/LoginTest.php
+<?php
+
+namespace Tests\Feature\Auth;
+
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class LoginTest extends TestCase
+{
+    use RefreshDatabase; // Reset database after each test
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(DatabaseSeeder::class); // Seed test data
+    }
+
+    public function test_an_existing_user_can_login(): void
+    {
+        // Given: Valid user credentials
+        $credentials = [
+            'email' => 'example@example.com',
+            'password' => 'password',
+        ];
+
+        // When: The user attempts to log in
+        $response = $this->postJson(route('auth.login'), $credentials);
+
+        // Then: The response should be successful
+        $response->assertStatus(200)
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'data' => [
+                    'user' => ['id', 'name', 'email'],
+                    'token',
+                    'expires_in'
+                ]
+            ]);
+    }
+}
+```
+
+### Testing Pattern (Given-When-Then)
+
+Tests follow the **Given-When-Then** pattern:
+
+1. **Given** - Set up test data and preconditions
+2. **When** - Perform the action being tested
+3. **Then** - Assert the expected outcome
+
+This makes tests readable and self-documenting.
+
+### Common Assertions
+
+#### Status Code Assertions
+
+```php
+$response->assertStatus(200);        // OK
+$response->assertStatus(201);        // Created
+$response->assertStatus(400);        // Bad Request
+$response->assertStatus(401);        // Unauthorized
+$response->assertStatus(403);        // Forbidden
+$response->assertStatus(404);        // Not Found
+$response->assertStatus(422);        // Unprocessable Entity (Validation Error)
+$response->assertStatus(500);        // Internal Server Error
+
+// Shorthand methods
+$response->assertOk();                // 200
+$response->assertCreated();           // 201
+$response->assertNoContent();         // 204
+$response->assertNotFound();          // 404
+$response->assertForbidden();         // 403
+$response->assertUnauthorized();      // 401
+```
+
+#### JSON Structure Assertions
+
+```php
+// Assert JSON has specific structure
+$response->assertJsonStructure([
+    'status',
+    'message',
+    'data' => [
+        'id',
+        'name',
+        'email'
+    ]
+]);
+
+// Assert JSON contains specific values
+$response->assertJsonFragment([
+    'status' => 200,
+    'message' => 'Success'
+]);
+
+// Assert JSON path has specific value
+$response->assertJsonPath('data.user.email', 'test@example.com');
+```
+
+#### Database Assertions
+
+```php
+// Assert record exists in database
+$this->assertDatabaseHas('users', [
+    'email' => 'test@example.com'
+]);
+
+// Assert record doesn't exist
+$this->assertDatabaseMissing('users', [
+    'email' => 'deleted@example.com'
+]);
+
+// Assert soft deleted record exists
+$this->assertSoftDeleted('articles', [
+    'id' => 1
+]);
+```
+
+### Testing Authenticated Requests
+
+The `TestCase` base class provides an `apiAs()` helper for authenticated requests:
+
+```php tests/TestCase.php
+protected function apiAs(User $user, string $method, string $uri, array $data = [])
+{
+    $headers = [
+        'Authorization' => 'Bearer ' . JWTAuth::fromUser($user),
+    ];
+
+    return $this->json($method, $uri, $data, $headers);
+}
+```
+
+**Usage:**
+
+```php
+public function test_authenticated_user_can_access_profile(): void
+{
+    // Create a user
+    $user = User::factory()->create();
+
+    // Make authenticated request
+    $response = $this->apiAs($user, 'GET', route('user.profile'));
+
+    $response->assertStatus(200)
+        ->assertJsonPath('data.email', $user->email);
+}
+```
+
+### Example: Testing Validation
+
+Test that validation rules are enforced:
+
+```php
+public function test_email_is_required(): void
+{
+    // Given: Missing email field
+    $credentials = [
+        'password' => 'password',
+    ];
+
+    // When: Attempting to log in
+    $response = $this->postJson(route('auth.login'), $credentials);
+
+    // Then: Should return validation error
+    $response->assertStatus(422)
+        ->assertJsonStructure([
+            'status',
+            'message',
+            'errors' => ['email']
+        ])
+        ->assertJsonPath('errors.email', __('validation.required', [
+            'attribute' => __('validation.attributes.email')
+        ]));
+}
+```
+
+### Example: Testing CRUD Operations
+
+#### Create (POST)
+
+```php
+public function test_can_create_article(): void
+{
+    $user = User::factory()->create();
+    $category = Category::factory()->create();
+    $subcategory = Subcategory::factory()->create(['category_id' => $category->id]);
+
+    $articleData = [
+        'name' => 'New Product',
+        'description' => 'A great product',
+        'price' => 99.99,
+        'category_id' => $category->id,
+        'subcategory_id' => $subcategory->id,
+    ];
+
+    $response = $this->apiAs($user, 'POST', route('articles.store'), $articleData);
+
+    $response->assertStatus(201)
+        ->assertJsonPath('data.name', 'New Product');
+
+    $this->assertDatabaseHas('articles', [
+        'name' => 'New Product',
+        'price' => 99.99,
+    ]);
+}
+```
+
+#### Read (GET)
+
+```php
+public function test_can_list_articles(): void
+{
+    Article::factory()->count(5)->create();
+
+    $response = $this->getJson(route('articles.index'));
+
+    $response->assertStatus(200)
+        ->assertJsonStructure([
+            'data' => [
+                '*' => ['id', 'name', 'description', 'price']
+            ]
+        ]);
+}
+```
+
+#### Update (PUT/PATCH)
+
+```php
+public function test_can_update_article(): void
+{
+    $user = User::factory()->create();
+    $article = Article::factory()->create(['name' => 'Old Name']);
+
+    $updateData = ['name' => 'New Name'];
+
+    $response = $this->apiAs($user, 'PUT', route('articles.update', $article), $updateData);
+
+    $response->assertStatus(200)
+        ->assertJsonPath('data.name', 'New Name');
+
+    $this->assertDatabaseHas('articles', [
+        'id' => $article->id,
+        'name' => 'New Name',
+    ]);
+}
+```
+
+#### Delete (DELETE)
+
+```php
+public function test_can_delete_article(): void
+{
+    $user = User::factory()->create();
+    $article = Article::factory()->create();
+
+    $response = $this->apiAs($user, 'DELETE', route('articles.destroy', $article));
+
+    $response->assertStatus(200);
+
+    // Check soft delete
+    $this->assertSoftDeleted('articles', ['id' => $article->id]);
+}
+```
+
+## Creating a New Test
+
+### Generate Test File
+
+```bash
+php artisan make:test Feature/Product/ProductCreateTest
+```
+
+This creates `tests/Feature/Product/ProductCreateTest.php`.
+
+### Test Template
+
+```php tests/Feature/Product/ProductCreateTest.php
+<?php
+
+namespace Tests\Feature\Product;
+
+use App\Models\Product;
+use App\Models\User;
+use Database\Seeders\DatabaseSeeder;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
+
+class ProductCreateTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(DatabaseSeeder::class);
+    }
+
+    public function test_authenticated_user_can_create_product(): void
+    {
+        // Given: An authenticated user with product data
+        $user = User::factory()->create();
+        $productData = [
+            'name' => 'Test Product',
+            'description' => 'A test product',
+            'price' => 49.99,
+        ];
+
+        // When: Creating a new product
+        $response = $this->apiAs($user, 'POST', route('products.store'), $productData);
+
+        // Then: The product should be created successfully
+        $response->assertStatus(201)
+            ->assertJsonStructure([
+                'status',
+                'message',
+                'data' => ['id', 'name', 'description', 'price']
+            ]);
+
+        $this->assertDatabaseHas('products', [
+            'name' => 'Test Product',
+            'price' => 49.99,
+        ]);
+    }
+
+    public function test_unauthenticated_user_cannot_create_product(): void
+    {
+        // Given: Product data without authentication
+        $productData = [
+            'name' => 'Test Product',
+            'price' => 49.99,
+        ];
+
+        // When: Attempting to create a product
+        $response = $this->postJson(route('products.store'), $productData);
+
+        // Then: Should be unauthorized
+        $response->assertStatus(401);
+    }
+
+    public function test_name_is_required(): void
+    {
+        // Given: Missing name field
+        $user = User::factory()->create();
+        $productData = [
+            'description' => 'A product',
+            'price' => 49.99,
+        ];
+
+        // When: Attempting to create product
+        $response = $this->apiAs($user, 'POST', route('products.store'), $productData);
+
+        // Then: Should return validation error
+        $response->assertStatus(422)
+            ->assertJsonValidationErrors(['name']);
+    }
+}
+```
+
+## Test Best Practices
+
+<CardGroup cols={2}>
+  <Card title="Test One Thing" icon="1">
+    Each test method should verify a single behavior or scenario.
+  </Card>
+
+  <Card title="Use Descriptive Names" icon="file-signature">
+    Test names should clearly describe what they test: `test_user_can_login_with_valid_credentials`
+  </Card>
+
+  <Card title="Follow Given-When-Then" icon="list-check">
+    Structure tests with clear setup, action, and assertion sections.
+  </Card>
+
+  <Card title="Test Edge Cases" icon="triangle-exclamation">
+    Don't just test happy paths. Test validation, authorization, and error scenarios.
+  </Card>
+</CardGroup>
+
+### What to Test
+
+✅ **Do Test:**
+- API endpoints return correct status codes
+- Response JSON structure matches expected format
+- Data is correctly stored in the database
+- Validation rules are enforced
+- Authentication and authorization work correctly
+- Edge cases and error handling
+
+❌ **Don't Test:**
+- Laravel framework functionality (it's already tested)
+- Third-party package behavior
+- Database connection itself
+
+## Troubleshooting
+
+### Test Database Issues
+
+**Error:** `SQLSTATE[HY000]: General error: 1 no such table`
+
+**Solution:** Ensure `RefreshDatabase` trait is used:
+
+```php
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+class MyTest extends TestCase
+{
+    use RefreshDatabase;
+}
+```
+
+### Authentication Failures
+
+**Error:** `401 Unauthorized` in tests
+
+**Solution:** Use the `apiAs()` helper or manually add JWT token:
+
+```php
+$user = User::factory()->create();
+$token = JWTAuth::fromUser($user);
+
+$response = $this->withHeader('Authorization', 'Bearer ' . $token)
+    ->getJson(route('user.profile'));
+```
+
+### Seeder Not Running
+
+**Issue:** Test data is missing
+
+**Solution:** Ensure seeder is called in `setUp()`:
+
+```php
+protected function setUp(): void
+{
+    parent::setUp();
+    $this->seed(DatabaseSeeder::class);
+}
+```
+
+### Factory Not Found
+
+**Error:** `Unable to locate factory for [App\Models\Product]`
+
+**Solution:** Create a factory:
+
+```bash
+php artisan make:factory ProductFactory --model=Product
+```
+
+### Slow Tests
+
+**Issue:** Tests take too long to run
+
+**Solutions:**
+
+1. Use parallel testing:
+   ```bash
+   php artisan test --parallel
+   ```
+
+2. Reduce BCRYPT rounds in `phpunit.xml` (already set to 4)
+
+3. Run specific tests instead of the full suite:
+   ```bash
+   php artisan test tests/Feature/Auth/
+   ```
+
+## Continuous Integration
+
+When setting up CI/CD, run tests before deployment:
+
+```yaml .github/workflows/tests.yml
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mbstring, xml, sqlite3
+      
+      - name: Install Dependencies
+        run: composer install --no-interaction --prefer-dist
+      
+      - name: Run Tests
+        run: composer run test
+```
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api/overview">
+    Explore all available API endpoints
+  </Card>
+  <Card title="Environment Setup" icon="gear" href="/guides/environment-setup">
+    Review environment configuration options
+  </Card>
+</CardGroup>
+
+## Additional Resources
+
+- [Laravel Testing Documentation](https://laravel.com/docs/12.x/testing)
+- [PHPUnit Documentation](https://phpunit.de/documentation.html)
+- [HTTP Tests](https://laravel.com/docs/12.x/http-tests)
+- [Database Testing](https://laravel.com/docs/12.x/database-testing)

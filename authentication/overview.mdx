@@ -1,0 +1,103 @@
+---
+title: 'Authentication Overview'
+description: 'Learn about the ServITech authentication system powered by JWT'
+---
+
+## Introduction
+
+ServITech uses **JWT (JSON Web Tokens)** for secure API authentication. This system provides stateless authentication, allowing clients to authenticate once and receive a token for subsequent requests.
+
+## Authentication Flow
+
+1. **Register** - Create a new user account with email, password, name, and phone
+2. **Login** - Authenticate with email and password to receive a JWT token
+3. **Authorized Requests** - Include the JWT token in the `Authorization` header
+4. **Logout** - Invalidate the current token (optional)
+5. **Password Reset** - Request a password reset link via email
+
+## JWT Token Details
+
+The ServITech API uses the **tymon/jwt-auth** package with the following configuration:
+
+<ParamField path="Algorithm" type="string" default="HS256">
+  HMAC SHA-256 signing algorithm for token security
+</ParamField>
+
+<ParamField path="Token Expiration" type="integer" default="60 minutes">
+  Default token lifetime (configurable via `JWT_TTL` environment variable)
+</ParamField>
+
+<ParamField path="Refresh Window" type="integer" default="20160 minutes (2 weeks)">
+  Time window for token refresh after expiration
+</ParamField>
+
+<ParamField path="Blacklist" type="boolean" default="true">
+  Token blacklist enabled for logout functionality
+</ParamField>
+
+## Token Claims
+
+Each JWT token includes the following required claims:
+
+- `iss` - Issuer (your API)
+- `iat` - Issued at timestamp
+- `exp` - Expiration timestamp
+- `nbf` - Not before timestamp
+- `sub` - Subject (user ID)
+- `jti` - JWT ID (unique token identifier)
+
+## Protected Routes
+
+Some endpoints require authentication. Include the JWT token in your requests:
+
+```bash
+Authorization: Bearer {your-jwt-token}
+```
+
+### Public Endpoints
+
+- `POST /auth/login` - User login
+- `POST /auth/register` - User registration
+- `POST /auth/reset-password` - Send password reset link
+- `PUT /auth/reset-password` - Reset password with token
+
+### Protected Endpoints
+
+- `POST /auth/logout` - User logout (requires valid token)
+- All `/user/*` routes - User profile management
+- All `/support-request/*` routes - Support ticket management
+
+### Admin-Only Endpoints
+
+Require authentication AND admin role:
+
+- All `/category/*` routes
+- All `/repair-request/*` routes
+
+<Note>
+  The API supports localization through the `Accept-Language` header. Supported languages include `en` (English) and `es` (Spanish).
+</Note>
+
+## User Roles
+
+The system supports role-based access control:
+
+- **USER** - Default role assigned on registration
+- **ADMIN** - Administrative role with elevated permissions
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="right-to-bracket" href="/authentication/login">
+    Authenticate and receive a JWT token
+  </Card>
+  <Card title="Register" icon="user-plus" href="/authentication/register">
+    Create a new user account
+  </Card>
+  <Card title="JWT Tokens" icon="key" href="/authentication/jwt-tokens">
+    Learn about token lifecycle and management
+  </Card>
+  <Card title="Password Reset" icon="lock-open" href="/authentication/password-reset">
+    Reset forgotten passwords
+  </Card>
+</CardGroup>

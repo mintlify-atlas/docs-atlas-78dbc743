@@ -1,0 +1,435 @@
+---
+title: 'Login'
+description: 'Authenticate users and receive JWT tokens'
+api: 'POST /auth/login'
+---
+
+## Endpoint
+
+```
+POST /auth/login
+```
+
+Authenticate a user with email and password credentials. Returns a JWT token on successful authentication.
+
+<Note>
+  This endpoint does not require authentication (unauthenticated).
+</Note>
+
+## Request Body
+
+<ParamField path="email" type="string" required>
+  User's email address. Must be a valid email format.
+  
+  **Validation**: `required|string|email`
+</ParamField>
+
+<ParamField path="password" type="string" required>
+  User's password. Minimum 8 characters.
+  
+  **Validation**: `required|min:8`
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean" required>
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Human-readable success message
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  Contains user information and authentication token
+  
+  <Expandable title="data properties">
+    <ResponseField name="user" type="object" required>
+      User information
+      
+      <Expandable title="user properties">
+        <ResponseField name="id" type="integer">
+          Unique user identifier
+        </ResponseField>
+        
+        <ResponseField name="role" type="string">
+          User's role (e.g., "USER", "ADMIN")
+        </ResponseField>
+        
+        <ResponseField name="name" type="string">
+          User's full name
+        </ResponseField>
+        
+        <ResponseField name="email" type="string">
+          User's email address
+        </ResponseField>
+        
+        <ResponseField name="phone" type="string">
+          User's phone number
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+    
+    <ResponseField name="token" type="string" required>
+      JWT access token for authentication
+    </ResponseField>
+    
+    <ResponseField name="expires_in" type="integer" required>
+      Token lifetime in seconds (calculated as `JWT_TTL * 60`)
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.servitech.com/auth/login" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "SecurePass123"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.servitech.com/auth/login', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  body: JSON.stringify({
+    email: 'john@example.com',
+    password: 'SecurePass123'
+  })
+});
+
+const data = await response.json();
+
+if (data.success) {
+  const token = data.data.token;
+  const user = data.data.user;
+  
+  // Store token securely
+  localStorage.setItem('jwt_token', token);
+  
+  console.log('Logged in as:', user.name);
+  console.log('Token expires in:', data.data.expires_in, 'seconds');
+}
+```
+
+```python Python
+import requests
+import json
+
+url = 'https://api.servitech.com/auth/login'
+headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}
+payload = {
+    'email': 'john@example.com',
+    'password': 'SecurePass123'
+}
+
+response = requests.post(url, headers=headers, data=json.dumps(payload))
+data = response.json()
+
+if data['success']:
+    token = data['data']['token']
+    user = data['data']['user']
+    
+    print(f"Logged in as: {user['name']}")
+    print(f"Token expires in: {data['data']['expires_in']} seconds")
+    
+    # Store token for future requests
+    session_token = token
+```
+
+```php PHP
+<?php
+
+$url = 'https://api.servitech.com/auth/login';
+$data = [
+    'email' => 'john@example.com',
+    'password' => 'SecurePass123'
+];
+
+$options = [
+    'http' => [
+        'header'  => "Content-Type: application/json\r\n" .
+                     "Accept: application/json\r\n",
+        'method'  => 'POST',
+        'content' => json_encode($data)
+    ]
+];
+
+$context  = stream_context_create($options);
+$response = file_get_contents($url, false, $context);
+$result = json_decode($response, true);
+
+if ($result['success']) {
+    $token = $result['data']['token'];
+    $user = $result['data']['user'];
+    
+    echo "Logged in as: " . $user['name'] . "\n";
+    echo "Token expires in: " . $result['data']['expires_in'] . " seconds\n";
+}
+```
+
+</CodeGroup>
+
+## Success Response
+
+**HTTP Status**: `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "User logged in successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "role": "USER",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+1234567890"
+    },
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJodHRwczovL2FwaS5zZXJ2aXRlY2guY29tIiwiaWF0IjoxNzA5OTEzNjAwLCJleHAiOjE3MDk5MTcyMDAsIm5iZiI6MTcwOTkxMzYwMCwianRpIjoiYTdiM2M5ZDFlNWYyIiwic3ViIjoxLCJwcnYiOiI4N2UwYWYxZTk1ODQzZjlhOGU3MTVjYzc3MTQzZjBhMGM3Yzk2Mjg3In0.rTCH9wnjKYY6F_xt0a5nNjPh2V_TkKJvZz9_xOqN1Yk",
+    "expires_in": 3600
+  }
+}
+```
+
+## Error Responses
+
+### Validation Error
+
+**HTTP Status**: `422 Unprocessable Entity`
+
+Returned when request data fails validation.
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": [
+      "The email field is required."
+    ],
+    "password": [
+      "The password must be at least 8 characters."
+    ]
+  }
+}
+```
+
+### User Not Found
+
+**HTTP Status**: `400 Bad Request`
+
+Returned when the email doesn't exist in the database.
+
+**Source**: `AuthController.php:83-88`
+
+```json
+{
+  "success": false,
+  "message": "We can't find a user with that email address.",
+  "errors": {
+    "email": "We can't find a user with that email address."
+  }
+}
+```
+
+### Invalid Password
+
+**HTTP Status**: `401 Unauthorized`
+
+Returned when the password is incorrect for the given email.
+
+**Source**: `AuthController.php:94-98`
+
+```json
+{
+  "success": false,
+  "message": "These credentials do not match our records.",
+  "errors": {
+    "password": "These credentials do not match our records."
+  }
+}
+```
+
+## Implementation Details
+
+The login process follows these steps (from `AuthController.php:63-117`):
+
+1. **Validate Request** - Validates email format and password length
+2. **Attempt Authentication** - Uses `auth()->attempt($credentials)` to verify credentials
+3. **Check User Exists** - If authentication fails, checks if user exists
+4. **Return Appropriate Error** - Returns specific error for user not found or invalid password
+5. **Generate Token** - On success, generates JWT token and calculates expiration
+6. **Return Response** - Returns user data, token, and expiration time
+
+<Warning>
+  The API differentiates between "user not found" (400) and "invalid password" (401) errors. This could potentially be used for user enumeration. Consider returning a generic error message in production.
+</Warning>
+
+## Using the Token
+
+After successful login, include the JWT token in subsequent requests:
+
+```bash
+Authorization: Bearer {token}
+```
+
+Example:
+
+```bash
+curl -X GET "https://api.servitech.com/user/profile" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept: application/json"
+```
+
+## Logout
+
+### Endpoint
+
+```
+POST /auth/logout
+```
+
+Invalidate the current JWT token and log out the user.
+
+<Warning>
+  This endpoint requires authentication. Include your JWT token in the `Authorization` header.
+</Warning>
+
+### Request Headers
+
+```
+Authorization: Bearer {your-jwt-token}
+Accept: application/json
+```
+
+### Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.servitech.com/auth/logout" \
+  -H "Authorization: Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9..." \
+  -H "Accept: application/json"
+```
+
+```javascript JavaScript
+const token = localStorage.getItem('jwt_token');
+
+const response = await fetch('https://api.servitech.com/auth/logout', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/json'
+  }
+});
+
+const data = await response.json();
+
+if (data.success) {
+  // Clear stored token
+  localStorage.removeItem('jwt_token');
+  console.log('Logged out successfully');
+}
+```
+
+```python Python
+import requests
+
+token = 'your-jwt-token-here'
+headers = {
+    'Authorization': f'Bearer {token}',
+    'Accept': 'application/json'
+}
+
+response = requests.post(
+    'https://api.servitech.com/auth/logout',
+    headers=headers
+)
+
+data = response.json()
+
+if data['success']:
+    print('Logged out successfully')
+```
+
+</CodeGroup>
+
+### Success Response
+
+**HTTP Status**: `200 OK`
+
+```json
+{
+  "success": true,
+  "message": "User logged out successfully"
+}
+```
+
+### Error Responses
+
+#### Not Authenticated
+
+**HTTP Status**: `401 Unauthorized`
+
+Returned when no valid token is provided.
+
+```json
+{
+  "success": false,
+  "message": "Unauthenticated."
+}
+```
+
+#### Already Logged Out
+
+**HTTP Status**: `401 Unauthorized`
+
+Returned when the user is already logged out.
+
+**Source**: `AuthController.php:269-272`
+
+```json
+{
+  "success": false,
+  "message": "User already logged out"
+}
+```
+
+### Implementation Details
+
+The logout process (from `AuthController.php:264-283`):
+
+1. **Check Authentication** - Verifies user is currently authenticated
+2. **Invalidate Token** - Calls `auth()->logout()` to blacklist the token
+3. **Return Success** - Returns confirmation message
+
+<Note>
+  After logout, the token is added to the blacklist and cannot be reused. You must login again to receive a new token.
+</Note>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Register" icon="user-plus" href="/authentication/register">
+    Create a new user account
+  </Card>
+  <Card title="Password Reset" icon="lock-open" href="/authentication/password-reset">
+    Reset forgotten password
+  </Card>
+  <Card title="JWT Tokens" icon="key" href="/authentication/jwt-tokens">
+    Learn about token management
+  </Card>
+</CardGroup>

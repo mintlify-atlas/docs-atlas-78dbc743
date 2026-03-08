@@ -1,0 +1,499 @@
+---
+title: 'Register'
+description: 'Create new user accounts in the ServITech system'
+api: 'POST /auth/register'
+---
+
+## Endpoint
+
+```
+POST /auth/register
+```
+
+Register a new user account. Creates a user with the default "USER" role.
+
+<Note>
+  This endpoint does not require authentication (unauthenticated).
+</Note>
+
+## Request Body
+
+<ParamField path="name" type="string" required>
+  User's full name. Minimum 2 characters.
+  
+  **Validation**: `required|string|min:2`
+</ParamField>
+
+<ParamField path="phone" type="string" required>
+  User's phone number. Minimum 10 characters.
+  
+  **Validation**: `required|string|min:10`
+</ParamField>
+
+<ParamField path="email" type="string" required>
+  User's email address. Must be a valid email format and unique in the system.
+  
+  **Validation**: `required|email|unique:users`
+</ParamField>
+
+<ParamField path="password" type="string" required>
+  User's password. Minimum 8 characters. Must be confirmed.
+  
+  **Validation**: `required|confirmed|min:8`
+</ParamField>
+
+<ParamField path="password_confirmation" type="string" required>
+  Password confirmation. Must match the `password` field.
+  
+  **Validation**: Must match `password` field
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean" required>
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string" required>
+  Human-readable success message
+</ResponseField>
+
+<ResponseField name="data" type="object" required>
+  Contains the newly created user information
+  
+  <Expandable title="data properties">
+    <ResponseField name="user" type="object" required>
+      Newly created user information
+      
+      <Expandable title="user properties">
+        <ResponseField name="id" type="integer">
+          Unique user identifier
+        </ResponseField>
+        
+        <ResponseField name="role" type="string">
+          User's role (always "USER" for new registrations)
+        </ResponseField>
+        
+        <ResponseField name="name" type="string">
+          User's full name
+        </ResponseField>
+        
+        <ResponseField name="email" type="string">
+          User's email address
+        </ResponseField>
+        
+        <ResponseField name="phone" type="string">
+          User's phone number
+        </ResponseField>
+      </Expandable>
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST "https://api.servitech.com/auth/register" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{
+    "name": "John Doe",
+    "phone": "+1234567890",
+    "email": "john@example.com",
+    "password": "SecurePass123",
+    "password_confirmation": "SecurePass123"
+  }'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.servitech.com/auth/register', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'John Doe',
+    phone: '+1234567890',
+    email: 'john@example.com',
+    password: 'SecurePass123',
+    password_confirmation: 'SecurePass123'
+  })
+});
+
+const data = await response.json();
+
+if (data.success) {
+  console.log('User registered:', data.data.user);
+  // Redirect to login or auto-login
+}
+```
+
+```python Python
+import requests
+import json
+
+url = 'https://api.servitech.com/auth/register'
+headers = {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+}
+payload = {
+    'name': 'John Doe',
+    'phone': '+1234567890',
+    'email': 'john@example.com',
+    'password': 'SecurePass123',
+    'password_confirmation': 'SecurePass123'
+}
+
+response = requests.post(url, headers=headers, data=json.dumps(payload))
+data = response.json()
+
+if data['success']:
+    user = data['data']['user']
+    print(f"User registered: {user['name']}")
+    print(f"Email: {user['email']}")
+    print(f"Role: {user['role']}")
+```
+
+```php PHP
+<?php
+
+$url = 'https://api.servitech.com/auth/register';
+$data = [
+    'name' => 'John Doe',
+    'phone' => '+1234567890',
+    'email' => 'john@example.com',
+    'password' => 'SecurePass123',
+    'password_confirmation' => 'SecurePass123'
+];
+
+$options = [
+    'http' => [
+        'header'  => "Content-Type: application/json\r\n" .
+                     "Accept: application/json\r\n",
+        'method'  => 'POST',
+        'content' => json_encode($data)
+    ]
+];
+
+$context  = stream_context_create($options);
+$response = file_get_contents($url, false, $context);
+$result = json_decode($response, true);
+
+if ($result['success']) {
+    $user = $result['data']['user'];
+    echo "User registered: " . $user['name'] . "\n";
+    echo "Role: " . $user['role'] . "\n";
+}
+```
+
+</CodeGroup>
+
+## Success Response
+
+**HTTP Status**: `201 Created`
+
+```json
+{
+  "success": true,
+  "message": "User registered successfully",
+  "data": {
+    "user": {
+      "id": 42,
+      "role": "USER",
+      "name": "John Doe",
+      "email": "john@example.com",
+      "phone": "+1234567890"
+    }
+  }
+}
+```
+
+## Error Responses
+
+### Validation Errors
+
+**HTTP Status**: `422 Unprocessable Entity`
+
+Returned when request data fails validation.
+
+#### Missing Required Fields
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "name": [
+      "The name field is required."
+    ],
+    "phone": [
+      "The phone field is required."
+    ],
+    "email": [
+      "The email field is required."
+    ],
+    "password": [
+      "The password field is required."
+    ]
+  }
+}
+```
+
+#### Invalid Email Format
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": [
+      "The email must be a valid email address."
+    ]
+  }
+}
+```
+
+#### Email Already Exists
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "email": [
+      "The email has already been taken."
+    ]
+  }
+}
+```
+
+#### Password Too Short
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "password": [
+      "The password must be at least 8 characters."
+    ]
+  }
+}
+```
+
+#### Password Confirmation Mismatch
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "password": [
+      "The password confirmation does not match."
+    ]
+  }
+}
+```
+
+#### Name Too Short
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "name": [
+      "The name must be at least 2 characters."
+    ]
+  }
+}
+```
+
+#### Phone Too Short
+
+```json
+{
+  "success": false,
+  "message": "The given data was invalid.",
+  "errors": {
+    "phone": [
+      "The phone must be at least 10 characters."
+    ]
+  }
+}
+```
+
+## Implementation Details
+
+The registration process follows these steps (from `AuthController.php:130-146`):
+
+1. **Validate Request** - Validates all fields using `RegisterUserRequest` rules
+2. **Create User** - Creates user with validated data
+3. **Assign Role** - Automatically assigns "USER" role to new account
+4. **Return Response** - Returns user data with HTTP 201 status
+
+**Source Code Reference**: `AuthController.php:130-146`
+
+```php
+public function register(RegisterUserRequest $request): JsonResponse
+{
+    $user = User::create($request->validated());
+    $user->assignRole(UserRoles::USER);
+
+    return ApiResponse::success(
+        message: __('messages.user.registered'),
+        status: Response::HTTP_CREATED,
+        data: ['user' => UserResource::make($user)]
+    );
+}
+```
+
+<Note>
+  The password is automatically hashed before storage using Laravel's built-in hashing. Never store passwords in plain text.
+</Note>
+
+## Next Steps After Registration
+
+After successful registration, you typically need to:
+
+1. **Login** - Authenticate to receive a JWT token
+2. **Complete Profile** - Add additional user information if needed
+3. **Verify Email** - If email verification is enabled (not documented in current implementation)
+
+### Auto-Login After Registration
+
+The current implementation does NOT automatically log in users after registration. To log in immediately:
+
+<CodeGroup>
+
+```javascript JavaScript
+// Register user
+const registerResponse = await fetch('https://api.servitech.com/auth/register', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json'
+  },
+  body: JSON.stringify({
+    name: 'John Doe',
+    phone: '+1234567890',
+    email: 'john@example.com',
+    password: 'SecurePass123',
+    password_confirmation: 'SecurePass123'
+  })
+});
+
+const registerData = await registerResponse.json();
+
+if (registerData.success) {
+  // Auto-login after successful registration
+  const loginResponse = await fetch('https://api.servitech.com/auth/login', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json'
+    },
+    body: JSON.stringify({
+      email: 'john@example.com',
+      password: 'SecurePass123'
+    })
+  });
+  
+  const loginData = await loginResponse.json();
+  
+  if (loginData.success) {
+    const token = loginData.data.token;
+    localStorage.setItem('jwt_token', token);
+    console.log('Registered and logged in successfully!');
+  }
+}
+```
+
+```python Python
+import requests
+import json
+
+# Register user
+register_url = 'https://api.servitech.com/auth/register'
+register_payload = {
+    'name': 'John Doe',
+    'phone': '+1234567890',
+    'email': 'john@example.com',
+    'password': 'SecurePass123',
+    'password_confirmation': 'SecurePass123'
+}
+
+register_response = requests.post(
+    register_url,
+    headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
+    data=json.dumps(register_payload)
+)
+register_data = register_response.json()
+
+if register_data['success']:
+    # Auto-login after registration
+    login_url = 'https://api.servitech.com/auth/login'
+    login_payload = {
+        'email': 'john@example.com',
+        'password': 'SecurePass123'
+    }
+    
+    login_response = requests.post(
+        login_url,
+        headers={'Content-Type': 'application/json', 'Accept': 'application/json'},
+        data=json.dumps(login_payload)
+    )
+    login_data = login_response.json()
+    
+    if login_data['success']:
+        token = login_data['data']['token']
+        print('Registered and logged in successfully!')
+        print(f"Token: {token}")
+```
+
+</CodeGroup>
+
+## User Roles
+
+All newly registered users receive the **USER** role by default (as defined in `UserRoles::USER`).
+
+**Available Roles:**
+- `USER` - Standard user with basic permissions
+- `ADMIN` - Administrator with elevated permissions
+
+<Warning>
+  Admin role cannot be assigned through registration. Admin accounts must be created manually or through an admin promotion endpoint (if available).
+</Warning>
+
+## Password Requirements
+
+Current password validation:
+- **Minimum length**: 8 characters
+- **Confirmation**: Required
+- **Hashing**: Automatic using bcrypt
+
+<Note>
+  Consider implementing additional password strength requirements in production:
+  - At least one uppercase letter
+  - At least one lowercase letter
+  - At least one number
+  - At least one special character
+</Note>
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Login" icon="right-to-bracket" href="/authentication/login">
+    Authenticate after registration
+  </Card>
+  <Card title="Password Reset" icon="lock-open" href="/authentication/password-reset">
+    Reset forgotten password
+  </Card>
+  <Card title="User Profile" icon="user" href="/users/profile">
+    Manage user profile information
+  </Card>
+</CardGroup>

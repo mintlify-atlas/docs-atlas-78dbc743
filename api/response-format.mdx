@@ -1,0 +1,397 @@
+---
+title: Response Format
+description: Standard API response structure and conventions
+---
+
+## Overview
+
+The ServITech Backend API uses a consistent JSON response format for all endpoints. This standardization makes it easier to handle responses in your application and provides a predictable structure for both success and error cases.
+
+All responses are handled by the `ApiResponse` class located at `app/Http/Responses/ApiResponse.php`.
+
+## Success Response Structure
+
+All successful API responses follow this structure:
+
+```json
+{
+  "status": 200,
+  "message": "Success message",
+  "data": {
+    // Response data object or array
+  }
+}
+```
+
+### Success Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | integer | HTTP status code (200, 201, etc.) |
+| `message` | string | Localized success message |
+| `data` | object/array | Response data (empty object `{}` if no data) |
+
+### Success Response Example
+
+<CodeGroup>
+```json Login Success
+{
+  "status": 200,
+  "message": "User logged in successfully",
+  "data": {
+    "user": {
+      "id": 1,
+      "name": "John Doe",
+      "email": "john@example.com",
+      "role": "user"
+    },
+    "token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9...",
+    "expires_in": 3600
+  }
+}
+```
+
+```json Get Articles
+{
+  "status": 200,
+  "message": "Articles retrieved successfully",
+  "data": {
+    "articles": [
+      {
+        "id": 1,
+        "title": "How to reset your password",
+        "content": "Follow these steps...",
+        "category": {
+          "id": 1,
+          "name": "Account Help"
+        },
+        "images": []
+      },
+      {
+        "id": 2,
+        "title": "Installing software updates",
+        "content": "To install updates...",
+        "category": {
+          "id": 2,
+          "name": "Software"
+        },
+        "images": []
+      }
+    ]
+  }
+}
+```
+
+```json Create Article
+{
+  "status": 201,
+  "message": "Article created successfully",
+  "data": {
+    "article": {
+      "id": 3,
+      "title": "New Article",
+      "content": "Article content here",
+      "category_id": 1,
+      "subcategory_id": 2,
+      "created_at": "2026-03-08T10:30:00.000000Z",
+      "updated_at": "2026-03-08T10:30:00.000000Z"
+    }
+  }
+}
+```
+
+```json No Content Response
+{
+  "status": 200,
+  "message": "Operation completed successfully",
+  "data": {}
+}
+```
+</CodeGroup>
+
+## Error Response Structure
+
+All error responses follow this structure:
+
+```json
+{
+  "status": 400,
+  "message": "Error message",
+  "errors": {
+    // Error details object
+  }
+}
+```
+
+### Error Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `status` | integer | HTTP error status code (400, 401, 404, 500, etc.) |
+| `message` | string | Localized error message |
+| `errors` | object | Detailed error information (empty object `{}` if no details) |
+
+### Error Response Examples
+
+<CodeGroup>
+```json Validation Error
+{
+  "status": 400,
+  "message": "The given data was invalid",
+  "errors": {
+    "email": [
+      "The email field is required."
+    ],
+    "password": [
+      "The password must be at least 8 characters."
+    ]
+  }
+}
+```
+
+```json Authentication Error
+{
+  "status": 401,
+  "message": "These credentials do not match our records",
+  "errors": {
+    "password": "These credentials do not match our records"
+  }
+}
+```
+
+```json Not Found Error
+{
+  "status": 404,
+  "message": "Article not found",
+  "errors": {}
+}
+```
+
+```json Server Error
+{
+  "status": 500,
+  "message": "Article creation failed",
+  "errors": {
+    "exception": "Database connection error"
+  }
+}
+```
+
+```json Already Logged Out
+{
+  "status": 401,
+  "message": "User is already logged out",
+  "errors": {}
+}
+```
+</CodeGroup>
+
+## HTTP Status Codes
+
+The API uses standard HTTP status codes to indicate the success or failure of requests.
+
+### Success Codes
+
+| Code | Name | Usage |
+|------|------|-------|
+| `200` | OK | Request successful, data returned |
+| `201` | Created | Resource successfully created |
+
+### Client Error Codes
+
+| Code | Name | Usage |
+|------|------|-------|
+| `400` | Bad Request | Invalid request data or validation error |
+| `401` | Unauthorized | Authentication required or failed |
+| `403` | Forbidden | Authenticated but not authorized |
+| `404` | Not Found | Resource not found |
+
+### Server Error Codes
+
+| Code | Name | Usage |
+|------|------|-------|
+| `500` | Internal Server Error | Unexpected server error |
+
+## Localized Messages
+
+All `message` fields in responses are localized based on the request's language preference. The API supports:
+
+- **Spanish (es)** - Default
+- **English (en)** - Fallback
+
+To specify your preferred language, include the `Accept-Language` header:
+
+<CodeGroup>
+```bash English
+curl -X POST "http://localhost:8000/api/auth/login" \
+  -H "Accept-Language: en" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "user@example.com",
+    "password": "password123"
+  }'
+```
+
+```bash Spanish
+curl -X POST "http://localhost:8000/api/auth/login" \
+  -H "Accept-Language: es" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "usuario@example.com",
+    "password": "contraseña123"
+  }'
+```
+</CodeGroup>
+
+## Handling Responses
+
+Here are examples of how to handle API responses in different programming languages:
+
+<CodeGroup>
+```javascript JavaScript
+fetch('http://localhost:8000/api/articles', {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json',
+    'Accept-Language': 'en'
+  }
+})
+  .then(response => response.json())
+  .then(result => {
+    if (result.status === 200) {
+      // Success - access data
+      console.log('Articles:', result.data.articles);
+    } else {
+      // Error - handle errors
+      console.error('Error:', result.message);
+      console.error('Details:', result.errors);
+    }
+  })
+  .catch(error => {
+    console.error('Network error:', error);
+  });
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'http://localhost:8000/api/articles',
+    headers={
+        'Accept': 'application/json',
+        'Accept-Language': 'en'
+    }
+)
+
+result = response.json()
+
+if result['status'] == 200:
+    # Success - access data
+    articles = result['data']['articles']
+    print(f"Found {len(articles)} articles")
+else:
+    # Error - handle errors
+    print(f"Error: {result['message']}")
+    if result['errors']:
+        print(f"Details: {result['errors']}")
+```
+
+```php PHP
+<?php
+$ch = curl_init();
+curl_setopt($ch, CURLOPT_URL, 'http://localhost:8000/api/articles');
+curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+curl_setopt($ch, CURLOPT_HTTPHEADER, [
+    'Accept: application/json',
+    'Accept-Language: en'
+]);
+
+$response = curl_exec($ch);
+$result = json_decode($response, true);
+curl_close($ch);
+
+if ($result['status'] === 200) {
+    // Success - access data
+    $articles = $result['data']['articles'];
+    echo "Found " . count($articles) . " articles\n";
+} else {
+    // Error - handle errors
+    echo "Error: " . $result['message'] . "\n";
+    if (!empty($result['errors'])) {
+        print_r($result['errors']);
+    }
+}
+?>
+```
+</CodeGroup>
+
+## Common Response Patterns
+
+### Empty Data Response
+
+When there is no data to return (e.g., after deletion), the `data` field contains an empty object:
+
+```json
+{
+  "status": 200,
+  "message": "Article deleted successfully",
+  "data": {}
+}
+```
+
+### List Responses
+
+When returning multiple items, they are wrapped in a named array within the `data` object:
+
+```json
+{
+  "status": 200,
+  "message": "Articles retrieved successfully",
+  "data": {
+    "articles": [
+      { "id": 1, "title": "Article 1" },
+      { "id": 2, "title": "Article 2" }
+    ]
+  }
+}
+```
+
+### Single Resource Responses
+
+When returning a single resource, it is wrapped in a named object within the `data` object:
+
+```json
+{
+  "status": 200,
+  "message": "Article retrieved successfully",
+  "data": {
+    "article": {
+      "id": 1,
+      "title": "Article Title",
+      "content": "Article content..."
+    }
+  }
+}
+```
+
+## Best Practices
+
+<Check>
+  **Always check the `status` field** to determine if the request was successful.
+</Check>
+
+<Check>
+  **Use the `message` field** to display user-friendly feedback.
+</Check>
+
+<Check>
+  **Parse the `errors` object** for detailed validation or error information.
+</Check>
+
+<Check>
+  **Handle network errors separately** from API errors in your application.
+</Check>
+
+<Tip>
+  The API returns consistent response structures even during exceptions, making error handling predictable and straightforward.
+</Tip>
