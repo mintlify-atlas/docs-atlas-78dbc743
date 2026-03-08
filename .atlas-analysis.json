@@ -146,7 +146,7 @@
   },
   "keyFeatures": [
     "JWT-based authentication and authorization",
-    "Role-based access control (User/Admin)",
+    "Role-based access control (User/Employee/Admin)",
     "Multi-language support (Spanish/English)",
     "Article management for tech and anime items",
     "Support request tracking system",
